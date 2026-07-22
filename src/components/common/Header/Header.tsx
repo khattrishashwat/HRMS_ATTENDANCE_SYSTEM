@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { FaMoon, FaSun, FaBars } from "react-icons/fa";
-import { FiInfo, FiChevronDown, FiX, FiSearch, FiUser } from "react-icons/fi";
-import { useTheme } from "../../../context/ThemeContext.tsx";
+import { FaBars } from "react-icons/fa";
+import { FiInfo, FiChevronDown, FiX, FiSearch, FiUser, FiBell } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { setXContextOrgCode, setXContextOrgId } from "../../../redux/store.ts";
 import api from "../../../utils/axiosinstance.ts";
@@ -16,6 +15,8 @@ import {
   handleSwitchToEmployee,
 } from "../../../servicesAPI/roleSwitchService.ts";
 import { performSessionLogout } from "../../../utils/sessionLogout.ts";
+import Build from "@/assets/svg/buildings.svg";
+import Profile from "@/assets/svg/Profile.svg";
 
 interface Organization {
   organizationId: number;
@@ -29,10 +30,18 @@ interface NavbarProps {
   onMobileMenuClick?: () => void;
   onProfileClick?: () => void;
   onNotificationClick?: () => void;
+  onDesktopCollapseClick?: () => void;
 }
 
 const STORAGE_KEY = "selected_org";
 const ADMIN_ROLE_KEY = "admin_role_name";
+
+function getInitials(name?: string | null): string {
+  if (!name?.trim()) return "HT";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
 
 const TopNavbar: React.FC<NavbarProps> = ({
   title,
@@ -40,8 +49,8 @@ const TopNavbar: React.FC<NavbarProps> = ({
   onMobileMenuClick,
   onProfileClick,
   onNotificationClick,
+  onDesktopCollapseClick,
 }) => {
-  const { darkMode, toggleTheme } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -49,7 +58,7 @@ const TopNavbar: React.FC<NavbarProps> = ({
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
   const [switchRoleOpen, setSwitchRoleOpen] = useState(false);
   const [roleSwitchLoading, setRoleSwitchLoading] = useState(false);
-  
+
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [search, setSearch] = useState("");
@@ -58,14 +67,14 @@ const TopNavbar: React.FC<NavbarProps> = ({
   const orgRef = useRef<HTMLDivElement>(null);
   const switchRoleRef = useRef<HTMLDivElement>(null);
 
-  const { userName, userType, description, isOrgAdmin, activeRoleMode } = useSelector((state: RootState) => state.auth);
+  const { userName, userType, description, isOrgAdmin, activeRoleMode } = useSelector(
+    (state: RootState) => state.auth
+  );
   const profileImageURL = useSelector((state: RootState) => state.auth.profileImage);
   const { unreadCount } = useNotificationsContext();
   const usertype = useSelector((state: RootState) => state.auth.userType);
 
-  const getSavedAdminRole = () => {
-    return localStorage.getItem(ADMIN_ROLE_KEY) || description || "Admin";
-  };
+  const getSavedAdminRole = () => localStorage.getItem(ADMIN_ROLE_KEY) || description || "Admin";
 
   const saveAdminRole = (role: string) => {
     if (role && role.trim() !== "" && role !== "Employee") {
@@ -73,7 +82,6 @@ const TopNavbar: React.FC<NavbarProps> = ({
     }
   };
 
-  // Keep admin role label in LS when in admin mode (for display after switching to employee)
   useEffect(() => {
     if (activeRoleMode === "ADMIN" && description && description !== "Employee") {
       saveAdminRole(description);
@@ -105,7 +113,7 @@ const TopNavbar: React.FC<NavbarProps> = ({
       setRoleSwitchLoading(false);
     }
   };
-  
+
   useEffect(() => {
     const fetchOrganizations = async () => {
       try {
@@ -148,7 +156,7 @@ const TopNavbar: React.FC<NavbarProps> = ({
       }
     };
     if (usertype == "HOST_ADMIN") fetchOrganizations();
-  }, [dispatch, userType]);
+  }, [dispatch, userType, usertype]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -174,7 +182,7 @@ const TopNavbar: React.FC<NavbarProps> = ({
 
   const handleOrgSelect = (org: Organization) => {
     const isDifferentOrg = selectedOrg?.organizationId !== org.organizationId;
-  
+
     setSelectedOrg(org);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(org));
     if (userType === "HOST_ADMIN") {
@@ -183,12 +191,12 @@ const TopNavbar: React.FC<NavbarProps> = ({
     }
     setOrgDropdownOpen(false);
     setSearch("");
-    
+
     if (isDifferentOrg) {
       window.location.reload();
     }
   };
-  
+
   const xContextOrgId = useSelector((state: RootState) => state.auth.xContextOrgId);
   const handleClearOrg = () => {
     setSelectedOrg(null);
@@ -215,93 +223,100 @@ const TopNavbar: React.FC<NavbarProps> = ({
     fetchData();
   }, [xContextOrgId]);
 
+  const displayName = userName?.trim() || "User";
+  const initials = getInitials(userName);
+  const roleLabel = currentRoleDisplay || "Admin";
+
+  const handleMenuClick = () => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      onMobileMenuClick?.();
+    } else {
+      onDesktopCollapseClick?.();
+    }
+  };
+
   return (
-    <div className="w-full z-10 flex justify-between items-center px-4 py-3 bg-[#FDFDFD] dark:bg-[#1e1e1e] border-b shadow-sm">
-      <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between gap-4 border-b border-[#E5E7EB] bg-white px-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:h-[72px] sm:px-6">
+      {/* Left: menu + page title */}
+      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         <button
-          className="md:hidden p-2 rounded-md bg-gray-200 dark:bg-gray-700"
-          onClick={onMobileMenuClick}
+          type="button"
+          aria-label="Toggle navigation"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#374151] transition hover:bg-[#F3F4F6]"
+          onClick={handleMenuClick}
         >
-          <FaBars />
+          <FaBars className="h-5 w-5" />
         </button>
 
-        <h1 className="text-[24px] font-medium text-black dark:text-white truncate max-w-[150px] md:max-w-none">
-          {title}
-        </h1>
-
-        {info && (
-          <div className="relative group">
-            <FiInfo className="text-gray-400 cursor-pointer" />
-            <div className="absolute top-6 left-0 opacity-0 group-hover:opacity-100 bg-white dark:bg-[#1e1e1e] border p-2 rounded shadow text-xs w-56">
-              {info}
+        <div className="flex min-w-0 items-center gap-2">
+          <h1 className="truncate text-base font-semibold text-[#111827] sm:text-lg md:text-xl">
+            {title}
+          </h1>
+          {info ? (
+            <div className="relative group hidden sm:block">
+              <FiInfo className="h-4 w-4 cursor-pointer text-[#9CA3AF]" />
+              <div className="pointer-events-none absolute left-0 top-6 z-50 w-56 rounded-lg border border-[#E5E7EB] bg-white p-2 text-xs text-[#374151] opacity-0 shadow-md transition group-hover:opacity-100">
+                {info}
+              </div>
             </div>
-          </div>
-        )}
+          ) : null}
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Right: actions */}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         {userType === "HOST_ADMIN" && (
-          <div className="flex  items-center gap-3">
+          <div className="hidden items-center gap-2 lg:flex">
             {selectedOrg && (
-              <div className="hidden md:flex h-[50px] items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary text-black text-sm font-medium">
-                <img src="/assets/TopNavBar/buildings.svg" className="w-4 h-4" alt="" />
-                Viewing:{" "}
-                <span className="font-bold">
-                  {" "}
-                  {selectedOrg.companyName || selectedOrg.merchantId}
+              <div className="flex h-10 items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-3 text-sm font-medium text-[#111827]">
+                <img src={Build} className="h-4 w-4" alt="" />
+                <span className="max-w-[140px] truncate">
+                  Viewing: <span className="font-semibold">{selectedOrg.companyName || selectedOrg.merchantId}</span>
                 </span>
-                <button onClick={handleClearOrg} className="ml-1">
-                  <FiX className="text-primary" />
+                <button type="button" onClick={handleClearOrg} className="ml-0.5" aria-label="Clear organization">
+                  <FiX className="h-4 w-4 text-primary" />
                 </button>
               </div>
             )}
             <div className="relative" ref={orgRef}>
-              {selectedOrg === null ? (
-                <button
-                  onClick={() => setOrgDropdownOpen((p) => !p)}
-                  className="flex items-center gap-2 px-4 py-1.5 h-[50px] rounded-full bg-tertiary text-black text-sm font-medium"
-                >
-                  <img src="/assets/TopNavBar/buildings.svg" className="w-4 h-4" alt="" />
-                  Select Company
-                  <FiChevronDown />
-                </button>
-              ) : (
-                <button
-                  onClick={() => setOrgDropdownOpen((p) => !p)}
-                  className="flex items-center gap-2 px-4 py-1.5 h-[50px] rounded-full bg-tertiary text-black text-sm font-medium"
-                >
-                  <img src="/assets/TopNavBar/buildings.svg" className="w-4 h-4" alt="" />
-                  Select Another Company
-                  <FiChevronDown />
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setOrgDropdownOpen((p) => !p)}
+                className="flex h-10 items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4 text-sm font-medium text-[#111827] transition hover:bg-[#F9FAFB]"
+              >
+                <img src={Build} className="h-4 w-4" alt="" />
+                <span className="whitespace-nowrap">
+                  {selectedOrg === null ? "Select Company" : "Select Another Company"}
+                </span>
+                <FiChevronDown className="h-4 w-4 text-[#6B7280]" />
+              </button>
 
               {orgDropdownOpen && (
-                <div className="absolute left-0 top-full mt-3 w-80 bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-xl border z-50">
+                <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-xl">
                   <div className="p-3">
-                    <div className="flex  items-center bg-[linear-gradient(to_right,theme(colors.tertiary)_85%,#4B1B91_85%)] bg-tertiary rounded-full px-3 py-2">
+                    <div className="flex items-center gap-2 rounded-full bg-tertiary px-3 py-2">
                       <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search Company..."
-                        className="flex-1 bg-[linear-gradient(to_right,theme(colors.tertiary)_93.8%,#4B1B91_93.8%)] outline-none text-sm placeholder-black text-black dark:text-white"
+                        className="flex-1 bg-transparent text-sm text-[#111827] outline-none placeholder:text-[#6B7280]"
                       />
-                      <FiSearch className="text-white" />
+                      <FiSearch className="h-4 w-4 text-primary" />
                     </div>
                   </div>
-
                   <div className="max-h-64 overflow-y-auto">
                     {filteredOrganizations.map((org) => (
                       <button
                         key={org.organizationId}
+                        type="button"
                         onClick={() => handleOrgSelect(org)}
-                        className="w-full text-left px-5 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="w-full px-5 py-3 text-left text-sm text-[#111827] transition hover:bg-[#F3F4F6]"
                       >
                         {org.companyName || org.merchantId}
                       </button>
                     ))}
                     {filteredOrganizations.length === 0 && (
-                      <div className="px-5 py-3 text-sm text-gray-400">No Company Found</div>
+                      <div className="px-5 py-3 text-sm text-[#9CA3AF]">No Company Found</div>
                     )}
                   </div>
                 </div>
@@ -310,60 +325,55 @@ const TopNavbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        {/* Switch Role Dropdown */}
         {isOrgAdmin && (
           <div className="relative" ref={switchRoleRef}>
             <button
+              type="button"
               onClick={() => setSwitchRoleOpen((p) => !p)}
-              className="flex items-center gap-2 px-4 py-1.5 h-[40px] rounded-full border border-gray-200 bg-white text-black text-sm font-medium hover:bg-gray-50 transition-colors"
               disabled={roleSwitchLoading}
+              className="flex h-10 items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-3 text-sm font-medium text-[#111827] transition hover:bg-[#F9FAFB] sm:px-4"
             >
-              <FiUser className="text-[#4B1B91]" />
-              {roleSwitchLoading ? "Switching..." : currentRoleDisplay}
-              <FiChevronDown className="text-gray-500" />
+              <FiUser className="h-4 w-4 shrink-0 text-primary" />
+              <span className="hidden max-w-[120px] truncate sm:inline">
+                {roleSwitchLoading ? "Switching..." : currentRoleDisplay}
+              </span>
+              <FiChevronDown className="h-4 w-4 shrink-0 text-[#6B7280]" />
             </button>
 
             {switchRoleOpen && (
-              <div className="absolute right-0 top-full mt-3 w-[260px] bg-white rounded-2xl shadow-xl border z-50 overflow-hidden">
-                <div className="px-5 py-3 text-[11px] font-bold text-gray-500 tracking-wider">
+              <div className="absolute right-0 top-full z-50 mt-2 w-[260px] overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-xl">
+                <div className="px-5 py-3 text-[11px] font-bold tracking-wider text-[#6B7280]">
                   SWITCH ROLE
                 </div>
                 <div className="flex flex-col">
-                  {/* Current Role Display */}
-                  <div className="flex items-start gap-3 px-5 py-3 bg-[#F3E8FF]">
-                    <div className="mt-0.5 flex items-center justify-center w-9 h-9 rounded-full shrink-0 bg-[#4B1B91] text-white">
-                      <FiUser className="w-4 h-4" />
+                  <div className="flex items-start gap-3 bg-tertiary px-5 py-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                      <FiUser className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-[#4B1B91]">
-                        {currentRoleDisplay}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {activeRoleMode === "ADMIN"
-                          ? "Organization Admin"
-                          : "Employee View"}
+                      <div className="text-sm font-medium text-primary">{currentRoleDisplay}</div>
+                      <div className="text-xs text-[#6B7280]">
+                        {activeRoleMode === "ADMIN" ? "Organization Admin" : "Employee View"}
                       </div>
                     </div>
                   </div>
 
-                  {/* Switch Option */}
                   <button
+                    type="button"
                     onClick={handleRoleSwitch}
                     disabled={roleSwitchLoading}
-                    className={`flex items-start gap-3 px-5 py-3 text-left transition-colors ${
-                      roleSwitchLoading ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50"
+                    className={`flex items-start gap-3 px-5 py-3 text-left transition ${
+                      roleSwitchLoading ? "cursor-not-allowed opacity-60" : "hover:bg-[#F9FAFB]"
                     }`}
                   >
-                    <div className="mt-0.5 flex items-center justify-center w-9 h-9 rounded-full shrink-0 bg-gray-100 text-gray-500">
-                      <FiUser className="w-4 h-4" />
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F3F4F6] text-[#6B7280]">
+                      <FiUser className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-[#111827]">
                         {roleSwitchLoading ? "Switching..." : switchRoleLabel}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {switchDescription}
-                      </div>
+                      <div className="text-xs text-[#6B7280]">{switchDescription}</div>
                     </div>
                   </button>
                 </div>
@@ -372,45 +382,62 @@ const TopNavbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        <div
-          className="relative cursor-pointer mr-2 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        <button
+          type="button"
+          aria-label="Notifications"
+          data-panel-ignore
           onClick={onNotificationClick}
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#374151] transition hover:bg-[#F9FAFB]"
         >
-          <img
-            src="/assets/Notification/Button.png"
-            alt="Bell"
-            className="w-10 h-10 object-contain"
-          />
+          <FiBell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute top-[8px] right-[8px] w-2.5 h-2.5 bg-[#F04438] rounded-full border-[1.5px] border-white dark:border-[#1e1e1e]"></span>
+            <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#F04438]" />
           )}
-        </div>
+        </button>
 
         <div className="relative" ref={dropdownRef}>
-          <img
-            src={profileImageURL || "/assets/Profile/Profile.svg"}
-            onError={(e: any) => {
-              e.target.src = "/assets/Profile/Profile.svg";
-            }}
-            alt=""
-            className="w-8 h-8 rounded-full cursor-pointer"
+          <button
+            type="button"
+            data-panel-ignore
             onClick={onProfileClick}
-          />
+            className="flex h-10 max-w-[200px] items-center gap-2 rounded-full border border-[#E5E7EB] bg-white py-1 pl-1 pr-3 transition hover:bg-[#F9FAFB] sm:max-w-none"
+          >
+            {profileImageURL ? (
+              <img
+                src={profileImageURL}
+                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                  e.currentTarget.src = Profile;
+                }}
+                alt=""
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                {initials}
+              </span>
+            )}
+            <span className="hidden min-w-0 text-left sm:block">
+              <span className="block truncate text-sm font-semibold leading-tight text-[#111827]">
+                {displayName}
+              </span>
+              <span className="block truncate text-xs leading-tight text-[#6B7280]">{roleLabel}</span>
+            </span>
+          </button>
+
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-[#1e1e1e] border rounded shadow">
+            <div className="absolute right-0 z-50 mt-2 w-32 overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-lg">
               <button
+                type="button"
                 onClick={handleLogout}
-                className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="w-full px-4 py-2 text-left text-sm text-[#111827] transition hover:bg-[#F3F4F6]"
               >
                 Logout
               </button>
             </div>
           )}
         </div>
-
-        <span className="hidden md:block text-sm font-medium dark:text-white">{userName}</span>
       </div>
-    </div>
+    </header>
   );
 };
 

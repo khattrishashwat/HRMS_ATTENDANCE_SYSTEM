@@ -1,29 +1,26 @@
-import React from "react";
+import Logo from "@/assets/svg/LogoMinimized.svg";
+import LuckPayLogo from "@/assets/svg/LuckPayLogo.svg";
 
 const Footer = () => {
   return (
-    <div className="w-full z-40  px-6 pb-4">
-      <div className="flex z-40 shadow-[2px_4px_24px_rgba(0,0,0,0.05)] min-h-[108px] items-center border-[1px] justify-between bg-white rounded-[16px] shadow-sm px-6 py-4  border-[#F3F4F6]">
-        <div className="flex flex-col items-start gap-2">
-          <div className="flex items-center justify-center gap-2 rounded-md text-sm font-bold">
-            <img src="/assets/SideNavBar/LogoMinimized.svg" alt="logo" />
-            <span className="font-bold">WorkPulse</span>
+    <footer className="w-full">
+      <div className="flex min-h-[88px] flex-col items-start justify-between gap-4 rounded-2xl border border-[#F3F4F6] bg-white px-4 py-4 shadow-[0_1px_3px_rgba(16,24,40,0.06)] sm:flex-row sm:items-center sm:px-6 sm:py-5">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-sm font-bold text-[#111827]">
+            <img src={Logo} alt="WorkPulse" className="h-6 w-6 object-contain" />
+            <span>WorkPulse</span>
           </div>
-          <div className="text-sm text-gray-700">
-            <p className="text-[14px] font-normal text-black">
-              © Copyright 2026. All Rights Reserved.
-            </p>
-          </div>
+          <p className="text-sm font-normal text-[#374151]">
+            © Copyright 2026. All Rights Reserved.
+          </p>
         </div>
 
-        <div className="text-sm text-[#4B1B91] flex items-center gap-2">
+        <div className="flex items-center gap-2 text-sm text-primary">
           <span className="font-medium">Powered By</span>
-          <span className="font-semibold text-purple-600">
-            <img src="/assets/SideNavBar/LuckPayLogo.svg" alt="" />
-          </span>
+          <img src={LuckPayLogo} alt="Fintech" className="h-6 w-auto object-contain" />
         </div>
       </div>
-    </div>
+    </footer>
   );
 };
 

@@ -5,6 +5,7 @@ import PrivateRoute from "./PrivateRoute.tsx";
 import SignIn from "../pages/Auth/Login.tsx";
 import ResetPassword from "../pages/Auth/ResetPassword.tsx";
 import MainLayout from "../layouts/MainLayout.tsx";
+import Dashboard from "../pages/Dashboard/Dashboard.tsx";
 import type { RootState } from "../redux/index.ts";
 
 /**
@@ -24,26 +25,16 @@ const UnknownRouteRedirect = (): JSX.Element => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return (
-    <Navigate to="/sign-in" replace state={{ from: location }} />
-  );
+  return <Navigate to="/sign-in" replace state={{ from: location }} />;
 };
 
 /**
  * Application route tree.
- * Auth lifecycle components (AuthInitializer / TokenWatcher) mount in App.tsx.
- *
- * Existing auth pages:
- * - /sign-in (Login)
- * - /login (legacy alias → /sign-in)
- * - /reset-password
- *
- * Forgot-password UI lives inside Login — no standalone page/route.
+ * Dashboard renders only inside MainLayout <Outlet /> — never as a standalone shell.
  */
 const AppRoutes = (): JSX.Element => {
   return (
     <Routes>
-      {/* Public authentication routes */}
       <Route
         path="/sign-in"
         element={
@@ -62,20 +53,18 @@ const AppRoutes = (): JSX.Element => {
         }
       />
 
-      {/* Protected application shell */}
       <Route
         element={
-          <PrivateRoute>
+          <PublicRoute>
             <MainLayout />
-          </PrivateRoute>
+          </PublicRoute>
         }
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<div />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<div />} />
       </Route>
 
-      {/* Entry + unknown paths */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<UnknownRouteRedirect />} />
     </Routes>

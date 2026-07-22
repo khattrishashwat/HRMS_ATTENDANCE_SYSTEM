@@ -13,6 +13,7 @@ const LayoutContent = () => {
   const { pageTitle, info } = getPageTitle(location.pathname);
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [rightPanel, setRightPanel] = useState<"notifications" | "profile" | null>(null);
 
   const rightPanelRef = useRef<HTMLDivElement | null>(null);
@@ -22,10 +23,8 @@ const LayoutContent = () => {
 
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-
       if (rightPanelRef.current?.contains(target)) return;
       if (target.closest("[data-panel-ignore]")) return;
-
       setRightPanel(null);
     };
 
@@ -33,37 +32,50 @@ const LayoutContent = () => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [rightPanel]);
 
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [location.pathname]);
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      <div className="hidden md:block">
-        <SideNavbar />
+    <div className="flex h-screen overflow-hidden bg-[#FAFAFA]">
+      <div className="hidden h-full md:block">
+        <SideNavbar
+          collapsed={sidebarCollapsed}
+          onCollapsedChange={setSidebarCollapsed}
+        />
       </div>
 
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="w-full h-full bg-white dark:bg-[#1e1e1e]">
+          <button
+            type="button"
+            aria-label="Close menu overlay"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <div className="relative z-10 h-full w-[min(100%,280px)] bg-white shadow-xl">
             <SideNavbar onClose={() => setMobileSidebarOpen(false)} isMobile />
           </div>
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col">
         <TopNavbar
           title={pageTitle}
           info={info}
           onMobileMenuClick={() => setMobileSidebarOpen(true)}
+          onDesktopCollapseClick={() => setSidebarCollapsed((c) => !c)}
           onProfileClick={() => setRightPanel((p) => (p === "profile" ? null : "profile"))}
           onNotificationClick={() =>
             setRightPanel((p) => (p === "notifications" ? null : "notifications"))
           }
         />
 
-        <main className="p-6 flex flex-col flex-1 overflow-y-auto bg-[#FAFAFA] dark:bg-[#1e1e1e]">
-          <div className="flex-1">
+        <main className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto bg-[#FAFAFA] p-4 sm:p-5 md:p-6">
+          <div className="min-w-0 flex-1">
             <Outlet />
           </div>
-
-          <div className="mt-6 mb-[5px]">
+          <div className="mt-6 shrink-0">
             <Footer />
           </div>
         </main>
@@ -71,14 +83,13 @@ const LayoutContent = () => {
 
       <div
         ref={rightPanelRef}
-        className={`fixed right-0 top-0 h-full z-40 transition-transform duration-300 ease-in-out ${
+        className={`fixed right-0 top-0 z-40 h-full transition-transform duration-300 ease-in-out ${
           rightPanel ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {rightPanel === "notifications" && (
           <Notifications onClose={() => setRightPanel(null)} />
         )}
-
         {rightPanel === "profile" && (
           <ProfilePanel onClose={() => setRightPanel(null)} />
         )}

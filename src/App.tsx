@@ -9,17 +9,7 @@ import { store, persistor } from "./redux/index.ts";
 import AuthInitializer from "./pages/Auth/AuthInitializer.tsx";
 import TokenWatcher from "./pages/Auth/TokenWatcher.tsx";
 
-/**
- * Root application shell.
- *
- * Initialization order:
- * 1. Redux Provider — auth state available to the tree
- * 2. PersistGate — wait for rehydration before auth guards/initializers run
- * 3. BrowserRouter — routing context
- * 4. AuthInitializer / TokenWatcher — session restore + expiry handling
- * 5. AppRoutes — public/private route tree
- * 6. ToastContainer — global notifications
- */
+
 function App() {
   return (
     <Provider store={store}>
