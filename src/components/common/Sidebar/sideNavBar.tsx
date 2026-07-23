@@ -281,7 +281,7 @@ const SideNavBar = ({
             type="button"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={() => setCollapsed(!collapsed)}
-            className="absolute right-[-12px] top-[72px] z-30 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md bg-primary text-white shadow-md transition hover:opacity-90"
+            className="absolute right-[-12px] top-[72px] z-[9999] flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md bg-primary text-white shadow-md transition hover:opacity-90"
           >
             {collapsed ? <FiChevronRight className="h-3.5 w-3.5" /> : <FiChevronLeft className="h-3.5 w-3.5" />}
           </button>

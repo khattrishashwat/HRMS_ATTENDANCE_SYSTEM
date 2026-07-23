@@ -6,12 +6,10 @@ import SignIn from "../pages/Auth/Login.tsx";
 import ResetPassword from "../pages/Auth/ResetPassword.tsx";
 import MainLayout from "../layouts/MainLayout.tsx";
 import Dashboard from "../pages/Dashboard/Dashboard.tsx";
+import Employees from "../pages/Employees/Employees.tsx";
 import type { RootState } from "../redux/index.ts";
 
-/**
- * Catch-all for unknown URLs.
- * Authenticated users → dashboard; others → sign-in (preserving destination).
- */
+
 const UnknownRouteRedirect = (): JSX.Element => {
   const location = useLocation();
   const { accessToken, refreshToken, isAwaitingRoleSelection } = useSelector(
@@ -28,10 +26,7 @@ const UnknownRouteRedirect = (): JSX.Element => {
   return <Navigate to="/sign-in" replace state={{ from: location }} />;
 };
 
-/**
- * Application route tree.
- * Dashboard renders only inside MainLayout <Outlet /> — never as a standalone shell.
- */
+
 const AppRoutes = (): JSX.Element => {
   return (
     <Routes>
@@ -62,6 +57,7 @@ const AppRoutes = (): JSX.Element => {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="employees" element={<Employees />} />
         <Route path="profile" element={<div />} />
       </Route>
 
