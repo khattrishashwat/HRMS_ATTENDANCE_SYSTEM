@@ -9,6 +9,13 @@ import { RootState } from "../../../redux/index.ts";
 import authApi from "../../../servicesAPI/authApi.ts";
 import { performSessionLogout } from "../../../utils/sessionLogout.ts";
 
+// Import all images
+import IconSvg from "@/assets/svg/Icon.svg";
+import AlertSvg from "@/assets/svg/Alert.svg";
+import ProfileSvg from "@/assets/svg/Profile.svg";
+import PasswordSvg from "@/assets/svg/Password.svg";
+import LogoutSvg from "@/assets/svg/logout.svg";
+
 const RequirementItem = ({ met, text }: { met: boolean; text: string }) => (
   <li className={`flex items-center gap-2 text-[12px] ${met ? "text-green-600" : "text-gray-500"}`}>
     <span
@@ -155,7 +162,7 @@ const ChangePasswordView = ({ onBack }: { onBack: () => void }) => {
       </div>
 
       <div className="flex justify-center my-5">
-        <img src="/assets/Profile/Icon.svg" className="w-14 h-14" />
+        <img src={IconSvg} className="w-14 h-14" alt="Icon" />
       </div>
 
       <div className="flex flex-col gap-4 px-5">
@@ -262,7 +269,7 @@ const LogoutConfirmationModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-[60px] h-[60px] rounded-full bg-[#F3EEFF] dark:bg-purple-900/30 flex items-center justify-center mb-5">
-          <img src="/assets/Profile/Alert.svg" alt="Alert" className="w-7 h-7" />
+          <img src={AlertSvg} alt="Alert" className="w-7 h-7" />
         </div>
         <h3 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2 leading-[28px]">
           Confirm Logout
@@ -288,7 +295,7 @@ const LogoutConfirmationModal = ({
             className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-[14px] flex items-center justify-center gap-2 hover:opacity-90 transition"
           >
             <img
-              src="/assets/Profile/logout.svg"
+              src={LogoutSvg}
               alt="Logout"
               className="w-[18px] h-[18px] brightness-0 invert"
             />
@@ -332,14 +339,15 @@ const ProfilePanel = ({ onClose }: { onClose: () => void }) => {
 
           <div className="flex flex-col items-center">
             <img
-              src={profileImage || "/assets/Profile/Profile.svg"}
+              src={profileImage || ProfileSvg}
               className="w-[114px] h-[114px] rounded-full border-[4px] border-white object-cover"
+              alt="Profile"
             />
             <h2 className="mt-4 text-[18px] font-medium leading-[22px] text-center text-gray-900 dark:text-white">
               {userName || "User"}
             </h2>
             <p className="text-[14px] font-semibold leading-[20px] text-gray-500">
-              {userType || "Admin"}
+              {userType}
             </p>
           </div>
 
@@ -356,7 +364,7 @@ const ProfilePanel = ({ onClose }: { onClose: () => void }) => {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                    <img src="/assets/Profile/Profile.svg" className="w-4 h-4" />
+                    <img src={ProfileSvg} className="w-4 h-4" alt="Profile" />
                   </div>
                   <div>
                     <p className="text-[14px] font-semibold leading-[20px] text-gray-900 dark:text-white">
@@ -376,7 +384,7 @@ const ProfilePanel = ({ onClose }: { onClose: () => void }) => {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                    <img src="/assets/Profile/Password.svg" className="w-4 h-4" />
+                    <img src={PasswordSvg} className="w-4 h-4" alt="Password" />
                   </div>
                   <div>
                     <p className="text-[14px] font-semibold leading-[20px] text-gray-900 dark:text-white">
@@ -399,7 +407,7 @@ const ProfilePanel = ({ onClose }: { onClose: () => void }) => {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                    <img src="/assets/Profile/logout.svg" className="w-4 h-4" />
+                    <img src={LogoutSvg} className="w-4 h-4" alt="Logout" />
                   </div>
                   <div>
                     <p className="text-[14px] font-semibold leading-[20px] text-gray-900 dark:text-white">

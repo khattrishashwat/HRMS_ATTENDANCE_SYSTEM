@@ -50,9 +50,9 @@ const AppRoutes = (): JSX.Element => {
 
       <Route
         element={
-          <PublicRoute>
+          <PrivateRoute>
             <MainLayout />
-          </PublicRoute>
+          </PrivateRoute>
         }
       >
         <Route index element={<Navigate to="/dashboard" replace />} />

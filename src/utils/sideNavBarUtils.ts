@@ -1,22 +1,26 @@
-export const getItemClass = (path?: string, isActive?: (path: string) => boolean) =>
-  `group flex h-12 w-full items-center justify-between gap-2 rounded-lg px-3 transition-colors duration-200 ${
-    path && isActive?.(path)
-      ? "border-l-4 border-l-primary bg-tertiary font-medium text-[#111827]"
-      : "border-l-4 border-l-transparent text-[#6B7280] hover:bg-[#F9FAFB] hover:text-[#111827]"
-  }`;
+/** Active fill matching screenshot lavender */
+const ACTIVE_BG = "bg-[#E9C7FF]";
+const ACTIVE_TEXT = "text-[#5B21B6]";
+const IDLE_TEXT = "text-[#1F2937]";
+const HOVER_BG = "hover:bg-[#F5F3FF]";
+
+export const getItemClass = (
+  path?: string,
+  isActive?: (path: string) => boolean,
+  collapsed?: boolean,
+  forceActive?: boolean
+) => {
+  const active = forceActive || !!(path && isActive?.(path));
+  return `group flex h-10 w-full items-center rounded-lg transition-all duration-200 ${
+    collapsed ? "justify-center px-2" : "justify-between gap-3 px-3"
+  } ${active ? `${ACTIVE_BG} ${ACTIVE_TEXT}` : `${IDLE_TEXT} ${HOVER_BG}`}`;
+};
 
 export const getSubItemClass = (path: string, isActive?: (path: string) => boolean) =>
-  `flex h-9 items-center rounded-md py-2 pl-3 text-sm transition-colors duration-200 ${
+  `flex h-[38px] w-full items-center rounded-lg px-3 text-[15px] font-medium transition-all duration-200 ${
     isActive?.(path)
-      ? "border-l-4 border-l-primary bg-tertiary font-medium text-[#111827]"
-      : "border-l-4 border-l-transparent text-[#6B7280] hover:bg-[#F9FAFB] hover:text-[#111827]"
-  }`;
-
-export const getImageClass = (path?: string, isActive?: (path: string) => boolean) =>
-  `h-5 w-5 shrink-0 transition duration-200 filter ${
-    path && isActive?.(path)
-      ? "brightness-0"
-      : "brightness-75 group-hover:brightness-0"
+      ? `${ACTIVE_BG} ${ACTIVE_TEXT}`
+      : `${IDLE_TEXT} ${HOVER_BG}`
   }`;
 
 export const professionColors: Record<string, string> = {

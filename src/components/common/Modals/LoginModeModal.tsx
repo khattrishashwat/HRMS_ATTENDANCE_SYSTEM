@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import Alert from "@/assets/svg/Alert.svg";
 
 interface LoginModeModalProps {
   loading: boolean;
@@ -23,7 +24,7 @@ const LoginModeModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-[60px] h-[60px] rounded-full bg-[#F3EEFF] dark:bg-purple-900/30 flex items-center justify-center mb-5">
-          <img src="/assets/Profile/Alert.svg" alt="Alert" className="w-7 h-7" />
+          <img src={Alert} alt="Alert" className="w-7 h-7" />
         </div>
         <h3 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2 leading-[28px]">
           Choose Login Mode

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getImageClass, getSubItemClass, getItemClass } from "../../../utils/sideNavBarUtils.ts";
+import { getSubItemClass, getItemClass } from "../../../utils/sideNavBarUtils.ts";
 import { navItems } from "./sideNavItems.ts";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import PermissionWrapper from "../../../permissions/PermissionWrapper.tsx";
@@ -9,6 +9,23 @@ import { useSelector } from "react-redux";
 import LuckPayLogo from "@/assets/svg/LuckPayLogo.svg";
 import orgImage from "@/assets/svg/LuckPayLogo.svg";
 
+// Import sidebar arrow icon
+import ArrowSvg from "@/assets/svg/Arrow.svg";
+
+// Auto-load all SVG icons from the sidebarImage directory
+const sidebarIcons = import.meta.glob(
+  "@/assets/sidebarImage/*.svg",
+  {
+    eager: true,
+    import: "default",
+  }
+) as Record<string, string>;
+
+/** Active fill matching screenshot lavender */
+const ACTIVE_BG = "bg-[#E9C7FF]";
+const ACTIVE_TEXT = "text-[#5B21B6]";
+const IDLE_TEXT = "text-[#1F2937]";
+const HOVER_BG = "hover:bg-[#F5F3FF]";
 
 const SideNavBar = ({
   onClose,
@@ -57,6 +74,37 @@ const SideNavBar = ({
     return navItems.filter((item) => isServiceAllowed(item));
   }, [subscribedServices]);
 
+  // Helper function to render icon from SVG
+  const renderIcon = (iconName: string, path: string) => {
+    const iconPath = `/src/assets/sidebarImage/${iconName}.svg`;
+    const iconSrc = sidebarIcons[iconPath];
+
+    if (!iconSrc) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn(`Sidebar icon not found: ${iconName}.svg`);
+      }
+      return null;
+    }
+
+    const active = isActive(path);
+    
+    return (
+      <img
+        src={iconSrc}
+        alt={iconName}
+        className={`h-5 w-5 shrink-0 object-contain ${
+          active ? ACTIVE_TEXT : IDLE_TEXT
+        }`}
+      />
+    );
+  };
+
+  // Helper to check if any child is active
+  const isParentActive = (item: any) => {
+    if (!item.children) return false;
+    return item.children.some((child: any) => isActive(child.path));
+  };
+
   return (
     <div className="relative h-full">
       <div
@@ -68,89 +116,53 @@ const SideNavBar = ({
         {isMobile && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-50 bg-gray-300 dark:bg-gray-700 p-2 rounded-md"
+            className="absolute right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-lg bg-[#F3F4F6] text-sm text-[#374151]"
           >
             ✕
           </button>
         )}
 
         {userType === "HOST_ADMIN" ? (
-          <div className="flex h-[72px] shrink-0 items-center justify-center px-3">
+          <div className="flex h-[72px] shrink-0 items-center justify-center px-4">
             <img
               src={LuckPayLogo}
               alt="Logo"
               className={`object-contain transition-all duration-300 ${
-                collapsed ? "h-10 w-10" : "h-12 w-auto"
+                collapsed ? "h-8 w-8" : "h-10 w-auto max-w-[160px]"
               }`}
             />
           </div>
         ) : (
-          <div className="flex h-[72px] shrink-0 items-center justify-center px-3">
+          <div className="flex h-[72px] shrink-0 items-center justify-center px-4">
             <img
               src={orgImage || LuckPayLogo}
               alt="Logo"
               className={`object-contain transition-all duration-300 ${
-                collapsed ? "h-10 w-10" : "h-14 w-auto max-w-[140px]"
+                collapsed ? "h-8 w-8" : "h-10 w-auto max-w-[160px]"
               }`}
             />
           </div>
         )}
 
-        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-2 pb-4">
-          {filteredNavItems.map((item) => (
-            <div key={item.id || item.section} className="w-full">
-              {item.path ? (
-                item.alwaysVisible ? (
-                  <div
-                    onClick={() => item.children?.length && toggleSection(item.section)}
-                    className={getItemClass(item.path, isActive)}
-                  >
-                    <Link 
-                      to={item.path}
-                      className="flex items-center gap-2 w-full min-w-0"
-                    >
-                      <img
-                        src={`/assets/SideNavBar/${item.icon}.svg`}
-                        alt={item.title}
-                        className={`${getImageClass(item.path, isActive)} filter brightness-75 flex-shrink-0 w-4 h-4`}
-                      />
-                      {!collapsed && (
-                        <span className="text-sm whitespace-nowrap">
-                          {item.title}
-                        </span>
-                      )}
-                    </Link>
-                    {!collapsed && item.children?.length && (
-                      <button
-                        onClick={() => toggleSection(item.section)}
-                        className="flex-shrink-0 ml-auto"
-                      >
-                        <img
-                          src="/assets/SideNavBar/Arrow.svg"
-                          className={`transition-transform w-3 h-3 ${
-                            isOpen === item.section ? "rotate-90" : ""
-                          }`}
-                        />
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <PermissionWrapper permission={item.permission!}>
+        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {filteredNavItems.map((item) => {
+            const isItemActive = isParentActive(item) || (item.path && isActive(item.path));
+            
+            return (
+              <div key={item.id || item.section} className="w-full">
+                {item.path ? (
+                  item.alwaysVisible ? (
                     <div
                       onClick={() => item.children?.length && toggleSection(item.section)}
-                      className={getItemClass(item.path, isActive)}
+                      className={getItemClass(item.path, isActive, collapsed)}
                     >
-                      <Link 
+                      <Link
                         to={item.path}
-                        className="flex items-center gap-2 w-full min-w-0"
+                        className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "w-full gap-3"}`}
                       >
-                        <img
-                          src={`/assets/SideNavBar/${item.icon}.svg`}
-                          alt={item.title}
-                          className={`${getImageClass(item.path, isActive)} filter brightness-75 flex-shrink-0 w-4 h-4`}
-                        />
+                        {renderIcon(item.icon, item.path)}
                         {!collapsed && (
-                          <span className="text-sm whitespace-nowrap">
+                          <span className="truncate text-[15px] font-medium whitespace-nowrap">
                             {item.title}
                           </span>
                         )}
@@ -158,122 +170,164 @@ const SideNavBar = ({
                       {!collapsed && item.children?.length && (
                         <button
                           onClick={() => toggleSection(item.section)}
-                          className="flex-shrink-0 ml-auto"
+                          className="ml-auto flex shrink-0 items-center justify-center"
                         >
                           <img
-                            src="/assets/SideNavBar/Arrow.svg"
-                            className={`transition-transform w-3 h-3 ${
-                              isOpen === item.section ? "rotate-90" : ""
+                            src={ArrowSvg}
+                            className={`h-3 w-3 transition-transform duration-300 ${
+                              isOpen === item.section ? "rotate-180" : ""
                             }`}
+                            alt="Arrow"
                           />
                         </button>
                       )}
                     </div>
-                  </PermissionWrapper>
-                )
-              ) : item.alwaysVisible ? (
-                <>
-                  <button
-                    onClick={() => toggleSection(item.section)}
-                    className={`${getItemClass()} flex w-full items-center justify-between group`}
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                      <img
-                        src={`/assets/SideNavBar/${item.icon}.svg`}
-                        alt={item.title}
-                        className="h-4 w-4 max-h-4 max-w-4 shrink-0 filter brightness-75"
-                      />
-                      {!collapsed && (
-                        <span className="truncate text-sm whitespace-nowrap">{item.title}</span>
-                      )}
-                    </div>
-
-                    {!collapsed && (
-                      <img
-                        src="/assets/SideNavBar/Arrow.svg"
-                        className={`ml-2 h-3 w-3 shrink-0 transition-transform duration-300 ${
-                          isOpen === item.section ? "rotate-90" : ""
-                        }`}
-                      />
-                    )}
-                  </button>
-
-                  {!collapsed && (
-                    <div
-                      className={`grid transition-all duration-300 ease-in-out ${
-                        isOpen === item.section
-                          ? "grid-rows-[1fr] opacity-100"
-                          : "grid-rows-[0fr] opacity-0"
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="ml-4 mt-1 space-y-1 border-l border-[#E5E7EB] pl-2">
-                          {item.children?.map(({ label, path, id }) => (
-                            <Link
-                              key={id}
-                              to={path}
-                              className={getSubItemClass(path, isActive)}
-                            >
-                              <span className="text-sm whitespace-nowrap">{label}</span>
-                            </Link>
-                          ))}
-                        </div>
+                  ) : (
+                    <PermissionWrapper permission={item.permission!}>
+                      <div
+                        onClick={() => item.children?.length && toggleSection(item.section)}
+                        className={getItemClass(item.path, isActive, collapsed)}
+                      >
+                        <Link
+                          to={item.path}
+                          className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "w-full gap-3"}`}
+                        >
+                          {renderIcon(item.icon, item.path)}
+                          {!collapsed && (
+                            <span className="truncate text-[15px] font-medium whitespace-nowrap">
+                              {item.title}
+                            </span>
+                          )}
+                        </Link>
+                        {!collapsed && item.children?.length && (
+                          <button
+                            onClick={() => toggleSection(item.section)}
+                            className="ml-auto flex shrink-0 items-center justify-center"
+                          >
+                            <img
+                              src={ArrowSvg}
+                              className={`h-3 w-3 transition-transform duration-300 ${
+                                isOpen === item.section ? "rotate-180" : ""
+                              }`}
+                              alt="Arrow"
+                            />
+                          </button>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <PermissionWrapper key={item.id} permission={item.permission!}>
-                  <button
-                    onClick={() => toggleSection(item.section)}
-                    className={`${getItemClass()} flex w-full items-center justify-between group`}
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                      <img
-                        src={`/assets/SideNavBar/${item.icon}.svg`}
-                        alt={item.title}
-                        className="h-4 w-4 max-h-4 max-w-4 shrink-0 filter brightness-75"
-                      />
+                    </PermissionWrapper>
+                  )
+                ) : item.alwaysVisible ? (
+                  <>
+                    {!collapsed && (
+                      <p className="mb-2 mt-4 px-3 text-sm font-medium text-[#9CA3AF] first:mt-1">
+                        {item.section}
+                      </p>
+                    )}
+                    <button
+                      onClick={() => toggleSection(item.section)}
+                      className={`${getItemClass(undefined, undefined, collapsed)} flex w-full`}
+                    >
+                      <div className={`flex min-w-0 items-center ${collapsed ? "" : "flex-1 gap-3"}`}>
+                        {renderIcon(item.icon, item.path || "")}
+                        {!collapsed && (
+                          <span className="truncate text-[15px] font-medium whitespace-nowrap">
+                            {item.title}
+                          </span>
+                        )}
+                      </div>
+
                       {!collapsed && (
-                        <span className="truncate text-sm whitespace-nowrap">{item.title}</span>
+                        <img
+                          src={ArrowSvg}
+                          className={`ml-2 h-3 w-3 shrink-0 transition-transform duration-300 ${
+                            isOpen === item.section ? "rotate-180" : ""
+                          }`}
+                          alt="Arrow"
+                        />
                       )}
-                    </div>
+                    </button>
 
                     {!collapsed && (
-                      <img
-                        src="/assets/SideNavBar/Arrow.svg"
-                        className={`ml-2 h-3 w-3 shrink-0 transition-transform duration-300 ${
-                          isOpen === item.section ? "rotate-90" : ""
+                      <div
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          isOpen === item.section
+                            ? "grid-rows-[1fr] opacity-100"
+                            : "grid-rows-[0fr] opacity-0"
                         }`}
-                      />
-                    )}
-                  </button>
-
-                  {!collapsed && (
-                    <div
-                      className={`grid transition-all duration-300 ease-in-out ${
-                        isOpen === item.section
-                          ? "grid-rows-[1fr] opacity-100"
-                          : "grid-rows-[0fr] opacity-0"
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="ml-4 mt-1 space-y-1 border-l border-[#E5E7EB] pl-2">
-                          {item.children?.map(({ label, path, id }) => (
-                            <PermissionWrapper key={id} permission={id}>
-                              <Link to={path} className={getSubItemClass(path, isActive)}>
-                                <span className="text-sm whitespace-nowrap">{label}</span>
+                      >
+                        <div className="overflow-hidden">
+                          <div className="ml-5 mt-1 space-y-1 border-l border-[#E5E7EB] pl-3">
+                            {item.children?.map(({ label, path, id }) => (
+                              <Link
+                                key={id}
+                                to={path}
+                                className={getSubItemClass(path, isActive)}
+                              >
+                                <span className="whitespace-nowrap">{label}</span>
                               </Link>
-                            </PermissionWrapper>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </PermissionWrapper>
-              )}
-            </div>
-          ))}
+                    )}
+                  </>
+                ) : (
+                  <PermissionWrapper key={item.id} permission={item.permission!}>
+                    {!collapsed && (
+                      <p className="mb-2 mt-4 px-3 text-sm font-medium text-[#9CA3AF] first:mt-1">
+                        {item.section}
+                      </p>
+                    )}
+                    <button
+                      onClick={() => toggleSection(item.section)}
+                      className={`${getItemClass(undefined, undefined, collapsed)} flex w-full`}
+                    >
+                      <div className={`flex min-w-0 items-center ${collapsed ? "" : "flex-1 gap-3"}`}>
+                        {renderIcon(item.icon, item.path || "")}
+                        {!collapsed && (
+                          <span className="truncate text-[15px] font-medium whitespace-nowrap">
+                            {item.title}
+                          </span>
+                        )}
+                      </div>
+
+                      {!collapsed && (
+                        <img
+                          src={ArrowSvg}
+                          className={`ml-2 h-3 w-3 shrink-0 transition-transform duration-300 ${
+                            isOpen === item.section ? "rotate-180" : ""
+                          }`}
+                          alt="Arrow"
+                        />
+                      )}
+                    </button>
+
+                    {!collapsed && (
+                      <div
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          isOpen === item.section
+                            ? "grid-rows-[1fr] opacity-100"
+                            : "grid-rows-[0fr] opacity-0"
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="ml-5 mt-1 space-y-1 border-l border-[#E5E7EB] pl-3">
+                            {item.children?.map(({ label, path, id }) => (
+                              <PermissionWrapper key={id} permission={id}>
+                                <Link to={path} className={getSubItemClass(path, isActive)}>
+                                  <span className="whitespace-nowrap">{label}</span>
+                                </Link>
+                              </PermissionWrapper>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </PermissionWrapper>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {!isMobile && (
@@ -281,9 +335,13 @@ const SideNavBar = ({
             type="button"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={() => setCollapsed(!collapsed)}
-            className="absolute right-[-12px] top-[72px] z-[9999] flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md bg-primary text-white shadow-md transition hover:opacity-90"
+            className="absolute right-[-12px] top-[72px] z-[9999] flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md bg-primary text-white shadow-sm transition hover:opacity-90"
           >
-            {collapsed ? <FiChevronRight className="h-3.5 w-3.5" /> : <FiChevronLeft className="h-3.5 w-3.5" />}
+            {collapsed ? (
+              <FiChevronRight className="h-3.5 w-3.5" />
+            ) : (
+              <FiChevronLeft className="h-3.5 w-3.5" />
+            )}
           </button>
         )}
       </div>
