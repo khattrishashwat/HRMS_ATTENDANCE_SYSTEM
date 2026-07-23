@@ -1,8 +1,8 @@
-/** Active fill matching screenshot lavender */
-const ACTIVE_BG = "bg-[#E9C7FF]";
-const ACTIVE_TEXT = "text-[#5B21B6]";
-const IDLE_TEXT = "text-[#1F2937]";
-const HOVER_BG = "hover:bg-[#F5F3FF]";
+/** Active fill matching reference lavender */
+export const ACTIVE_BG = "bg-[#E9C7FF]";
+export const ACTIVE_TEXT = "text-[#5B21B6]";
+export const IDLE_TEXT = "text-[#1F2937]";
+export const HOVER_BG = "hover:bg-[#F5F3FF]";
 
 export const getItemClass = (
   path?: string,
@@ -22,6 +22,20 @@ export const getSubItemClass = (path: string, isActive?: (path: string) => boole
       ? `${ACTIVE_BG} ${ACTIVE_TEXT}`
       : `${IDLE_TEXT} ${HOVER_BG}`
   }`;
+
+export const getImageClass = (
+  path?: string,
+  isActive?: (path: string) => boolean,
+  forceActive?: boolean
+) => {
+  const active = forceActive || !!(path && isActive?.(path));
+
+  return `transition-all duration-200 ${
+    active
+      ? "brightness-0 saturate-100"
+      : "brightness-75 group-hover:brightness-50"
+  }`;
+};
 
 export const professionColors: Record<string, string> = {
   "Software Engineer": "bg-blue-100 text-blue-700",

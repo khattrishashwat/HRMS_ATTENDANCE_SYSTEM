@@ -125,7 +125,7 @@ const authApi = {
     if (options?.orgId) {
       headers["X-ORG-ID"] = options.orgId;
     }
-    return api.post("/auth/toggleRole", payload, { headers });
+    return api.post("/toggleRole", payload, { headers });
   },
 
 

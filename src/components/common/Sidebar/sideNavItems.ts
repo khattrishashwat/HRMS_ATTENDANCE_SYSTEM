@@ -249,7 +249,8 @@ export const navItems: NavItem[] = [
   {
     id: "MEN_ANN",
     title: "Announcements",
-    icon: "Announcement",
+    // Filename in assets/sidebarImage is Annoucement.svg (typo preserved)
+    icon: "Annoucement",
     section: "Organizational Management",
     permission: "MEN_ANN",
     serviceCode: "ANNOUNCEMENTS",

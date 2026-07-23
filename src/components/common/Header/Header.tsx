@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaBars } from "react-icons/fa";
-import { FiInfo, FiChevronDown, FiX, FiSearch, FiUser, FiBell } from "react-icons/fi";
-import { useDispatch, useSelector } from "react-redux";
-import { setXContextOrgCode, setXContextOrgId } from "../../../redux/store.ts";
-import api from "../../../utils/axiosinstance.ts";
+import { FiInfo, FiChevronDown, FiUser, FiBell } from "react-icons/fi";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../../redux/index.ts";
 import { toast } from "react-toastify";
-import { getOrgMasterData } from "../../../Service/gerOrgData.ts";
 import { useNotificationsContext } from "../../../hooks/useNotifications.tsx";
 import { store } from "../../../redux/index.ts";
 import {
@@ -15,14 +12,7 @@ import {
   handleSwitchToEmployee,
 } from "../../../servicesAPI/roleSwitchService.ts";
 import { performSessionLogout } from "../../../utils/sessionLogout.ts";
-import Build from "@/assets/svg/buildings.svg";
 import Profile from "@/assets/svg/Profile.svg";
-
-interface Organization {
-  organizationId: number;
-  merchantId: string;
-  companyName: string;
-}
 
 interface NavbarProps {
   title: string;
@@ -33,7 +23,6 @@ interface NavbarProps {
   onDesktopCollapseClick?: () => void;
 }
 
-const STORAGE_KEY = "selected_org";
 const ADMIN_ROLE_KEY = "admin_role_name";
 
 function getInitials(name?: string | null): string {
@@ -51,28 +40,20 @@ const TopNavbar: React.FC<NavbarProps> = ({
   onNotificationClick,
   onDesktopCollapseClick,
 }) => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
   const [switchRoleOpen, setSwitchRoleOpen] = useState(false);
   const [roleSwitchLoading, setRoleSwitchLoading] = useState(false);
 
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
-  const [search, setSearch] = useState("");
-
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const orgRef = useRef<HTMLDivElement>(null);
   const switchRoleRef = useRef<HTMLDivElement>(null);
 
-  const { userName, userType, description, isOrgAdmin, activeRoleMode } = useSelector(
+  const { userName, description, isOrgAdmin, activeRoleMode } = useSelector(
     (state: RootState) => state.auth
   );
   const profileImageURL = useSelector((state: RootState) => state.auth.profileImage);
   const { unreadCount } = useNotificationsContext();
-  const usertype = useSelector((state: RootState) => state.auth.userType);
 
   const getSavedAdminRole = () => localStorage.getItem(ADMIN_ROLE_KEY) || description || "Admin";
 
@@ -115,56 +96,9 @@ const TopNavbar: React.FC<NavbarProps> = ({
   };
 
   useEffect(() => {
-    const fetchOrganizations = async () => {
-      try {
-        const res = await api.post("/users/getAllOrganizations", {
-          page: 0,
-          size: 1000,
-        });
-
-        const orgList = res.data?.data?.paginatedList || [];
-        setOrganizations(orgList);
-
-        if (orgList.length === 0) return;
-
-        const stored = localStorage.getItem(STORAGE_KEY);
-
-        if (stored) {
-          const parsedOrg = JSON.parse(stored);
-          setSelectedOrg(parsedOrg);
-          if (userType === "HOST_ADMIN") {
-            dispatch(setXContextOrgId(parsedOrg.organizationId));
-            dispatch(setXContextOrgCode(parsedOrg.merchantId));
-          }
-        } else {
-          const firstOrg = orgList[0];
-          setSelectedOrg(firstOrg);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(firstOrg));
-          if (userType === "HOST_ADMIN") {
-            dispatch(setXContextOrgId(firstOrg.organizationId));
-            dispatch(setXContextOrgCode(firstOrg.merchantId));
-          }
-        }
-      } catch (error: any) {
-        toast.error(error?.response?.data?.message, {
-          icon: false,
-          autoClose: 6000,
-          closeOnClick: true,
-          hideProgressBar: true,
-          className: "custom-toast-width",
-        });
-      }
-    };
-    if (usertype == "HOST_ADMIN") fetchOrganizations();
-  }, [dispatch, userType, usertype]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
-      }
-      if (orgRef.current && !orgRef.current.contains(event.target as Node)) {
-        setOrgDropdownOpen(false);
       }
       if (switchRoleRef.current && !switchRoleRef.current.contains(event.target as Node)) {
         setSwitchRoleOpen(false);
@@ -174,54 +108,9 @@ const TopNavbar: React.FC<NavbarProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredOrganizations = useMemo(() => {
-    return organizations.filter((org) =>
-      (org.companyName || "").toLowerCase().includes(search.toLowerCase())
-    );
-  }, [organizations, search]);
-
-  const handleOrgSelect = (org: Organization) => {
-    const isDifferentOrg = selectedOrg?.organizationId !== org.organizationId;
-
-    setSelectedOrg(org);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(org));
-    if (userType === "HOST_ADMIN") {
-      dispatch(setXContextOrgId(org.organizationId));
-      dispatch(setXContextOrgCode(org.merchantId));
-    }
-    setOrgDropdownOpen(false);
-    setSearch("");
-
-    if (isDifferentOrg) {
-      window.location.reload();
-    }
-  };
-
-  const xContextOrgId = useSelector((state: RootState) => state.auth.xContextOrgId);
-  const handleClearOrg = () => {
-    setSelectedOrg(null);
-    localStorage.removeItem(STORAGE_KEY);
-    dispatch(setXContextOrgId(null as any));
-    dispatch(setXContextOrgCode(null as any));
-  };
-
   const handleLogout = async () => {
     await performSessionLogout({ callServer: true, hardRedirect: true });
   };
-
-  useEffect(() => {
-    if (!xContextOrgId) return;
-
-    const fetchData = async () => {
-      try {
-        await getOrgMasterData(xContextOrgId);
-      } catch (err) {
-        console.error("Org master data fetch failed", err);
-      }
-    };
-
-    fetchData();
-  }, [xContextOrgId]);
 
   const displayName = userName?.trim() || "User";
   const initials = getInitials(userName);
@@ -265,65 +154,7 @@ const TopNavbar: React.FC<NavbarProps> = ({
 
       {/* Right: actions */}
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        {userType === "HOST_ADMIN" && (
-          <div className="hidden items-center gap-2 lg:flex">
-            {selectedOrg && (
-              <div className="flex h-10 items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-3 text-sm font-medium text-[#111827]">
-                <img src={Build} className="h-4 w-4" alt="" />
-                <span className="max-w-[140px] truncate">
-                  Viewing: <span className="font-semibold">{selectedOrg.companyName || selectedOrg.merchantId}</span>
-                </span>
-                <button type="button" onClick={handleClearOrg} className="ml-0.5" aria-label="Clear organization">
-                  <FiX className="h-4 w-4 text-primary" />
-                </button>
-              </div>
-            )}
-            <div className="relative" ref={orgRef}>
-              <button
-                type="button"
-                onClick={() => setOrgDropdownOpen((p) => !p)}
-                className="flex h-10 items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-4 text-sm font-medium text-[#111827] transition hover:bg-[#F9FAFB]"
-              >
-                <img src={Build} className="h-4 w-4" alt="" />
-                <span className="whitespace-nowrap">
-                  {selectedOrg === null ? "Select Company" : "Select Another Company"}
-                </span>
-                <FiChevronDown className="h-4 w-4 text-[#6B7280]" />
-              </button>
-
-              {orgDropdownOpen && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-xl">
-                  <div className="p-3">
-                    <div className="flex items-center gap-2 rounded-full bg-tertiary px-3 py-2">
-                      <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search Company..."
-                        className="flex-1 bg-transparent text-sm text-[#111827] outline-none placeholder:text-[#6B7280]"
-                      />
-                      <FiSearch className="h-4 w-4 text-primary" />
-                    </div>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {filteredOrganizations.map((org) => (
-                      <button
-                        key={org.organizationId}
-                        type="button"
-                        onClick={() => handleOrgSelect(org)}
-                        className="w-full px-5 py-3 text-left text-sm text-[#111827] transition hover:bg-[#F3F4F6]"
-                      >
-                        {org.companyName || org.merchantId}
-                      </button>
-                    ))}
-                    {filteredOrganizations.length === 0 && (
-                      <div className="px-5 py-3 text-sm text-[#9CA3AF]">No Company Found</div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Host Admin org selector removed from Header — lives in Sidebar */}
 
         {isOrgAdmin && (
           <div className="relative" ref={switchRoleRef}>

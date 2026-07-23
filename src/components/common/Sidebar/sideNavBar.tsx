@@ -1,31 +1,42 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getSubItemClass, getItemClass } from "../../../utils/sideNavBarUtils.ts";
-import { navItems } from "./sideNavItems.ts";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiChevronDown } from "react-icons/fi";
+import { useSelector } from "react-redux";
+import { getImageClass,getItemClass,getSubItemClass } from "../../../utils/sideNavBarUtils.ts";
+import { navItems, type NavItem } from "./sideNavItems.ts";
 import PermissionWrapper from "../../../permissions/PermissionWrapper.tsx";
 import { RootState } from "../../../redux";
-import { useSelector } from "react-redux";
 import LuckPayLogo from "@/assets/svg/LuckPayLogo.svg";
-import orgImage from "@/assets/svg/LuckPayLogo.svg";
+import LogoShort from "@/assets/svg/LogoShort.svg";
+import UserManagementIcon from "@/assets/svg/UserManagement.svg";
+import OrganizationSelector from "../OrganizationSelector/OrganizationSelector.tsx";
 
-// Import sidebar arrow icon
-import ArrowSvg from "@/assets/svg/Arrow.svg";
+const sidebarIcons = import.meta.glob("@/assets/sidebarImage/*.svg", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
 
-// Auto-load all SVG icons from the sidebarImage directory
-const sidebarIcons = import.meta.glob(
-  "@/assets/sidebarImage/*.svg",
-  {
-    eager: true,
-    import: "default",
-  }
-) as Record<string, string>;
+/** Extra fallbacks when an icon lives outside sidebarImage/ */
+const ICON_FALLBACKS: Record<string, string> = {
+  UserManagement: UserManagementIcon,
+  Announcement: sidebarIcons[
+    Object.keys(sidebarIcons).find((k) => k.endsWith("/Annoucement.svg")) ?? ""
+  ],
+};
 
-/** Active fill matching screenshot lavender */
-const ACTIVE_BG = "bg-[#E9C7FF]";
-const ACTIVE_TEXT = "text-[#5B21B6]";
-const IDLE_TEXT = "text-[#1F2937]";
-const HOVER_BG = "hover:bg-[#F5F3FF]";
+function resolveSidebarIcon(iconName: string): string | undefined {
+  const aliases: Record<string, string> = {
+    Announcement: "Annoucement",
+  };
+  const fileName = aliases[iconName] ?? iconName;
+
+  const match = Object.entries(sidebarIcons).find(([path]) =>
+    path.endsWith(`/${fileName}.svg`)
+  );
+  if (match) return match[1];
+
+  return ICON_FALLBACKS[iconName] ?? ICON_FALLBACKS[fileName];
+}
 
 const SideNavBar = ({
   onClose,
@@ -40,32 +51,40 @@ const SideNavBar = ({
 }) => {
   const [isOpen, setIsOpen] = useState<string | null>(null);
   const [internalCollapsed, setInternalCollapsed] = useState(false);
+
   const collapsed = collapsedProp ?? internalCollapsed;
   const setCollapsed = (value: boolean | ((prev: boolean) => boolean)) => {
     const next = typeof value === "function" ? value(collapsed) : value;
     if (onCollapsedChange) onCollapsedChange(next);
     else setInternalCollapsed(next);
   };
-  const location = useLocation();
 
+  const location = useLocation();
   const userType = useSelector((state: RootState) => state.auth.userType);
-  const subscribedServices = useSelector((state: RootState) => state.auth.subscribedServices);
+  const subscribedServices = useSelector(
+    (state: RootState) => state.auth.subscribedServices
+  );
 
   const isActive = (path: string) => {
+    if (!path) return false;
     const current = location.pathname;
     return current === path || current.startsWith(path + "/");
   };
 
-  const toggleSection = (section: string) => {
-    setIsOpen(isOpen === section ? null : section);
+  const isParentActive = (item: NavItem) =>
+    !!item.children?.some((child) => isActive(child.path));
+
+  /** Expand/collapse by unique item.id — never by section */
+  const toggleSection = (id: string) => {
+    setIsOpen((prev) => (prev === id ? null : id));
   };
 
   const filteredNavItems = useMemo(() => {
-    const isServiceAllowed = (item: any) => {
+    const isServiceAllowed = (item: NavItem) => {
       if (item.alwaysVisible) return true;
       if (!item.serviceCode) return true;
 
-      return subscribedServices?.some((s: any) => {
+      return subscribedServices?.some((s: string | { serviceCode?: string }) => {
         if (typeof s === "string") return s === item.serviceCode;
         return s?.serviceCode === item.serviceCode;
       });
@@ -74,47 +93,175 @@ const SideNavBar = ({
     return navItems.filter((item) => isServiceAllowed(item));
   }, [subscribedServices]);
 
-  // Helper function to render icon from SVG
-  const renderIcon = (iconName: string, path: string) => {
-    const iconPath = `/src/assets/sidebarImage/${iconName}.svg`;
-    const iconSrc = sidebarIcons[iconPath];
+  // Auto-open parent when landing on a child route
+  useEffect(() => {
+    const activeParent = filteredNavItems.find((item) =>
+      item.children?.some((child) => isActive(child.path))
+    );
+    if (activeParent) {
+      setIsOpen(activeParent.id);
+    }
+  }, [location.pathname, filteredNavItems]);
 
-    if (!iconSrc) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn(`Sidebar icon not found: ${iconName}.svg`);
-      }
-      return null;
+   
+  const renderIcon = (
+  iconName: string,
+  path?: string,
+  forceActive?: boolean
+) => {
+  const iconSrc = resolveSidebarIcon(iconName);
+
+  if (!iconSrc) {
+    if (import.meta.env.DEV) {
+      console.warn(`Sidebar icon not found: ${iconName}.svg`);
     }
 
-    const active = isActive(path);
-    
-    return (
-      <img
-        src={iconSrc}
-        alt={iconName}
-        className={`h-5 w-5 shrink-0 object-contain ${
-          active ? ACTIVE_TEXT : IDLE_TEXT
-        }`}
-      />
+    return null;
+  }
+
+  return (
+    <img
+      src={iconSrc}
+      alt=""
+      aria-hidden="true"
+      className={`h-5 w-5 shrink-0 object-contain ${getImageClass(
+        path,
+        isActive,
+        forceActive
+      )}`}
+    />
+  );
+};
+
+  const logoSrc = collapsed ? LogoShort : LuckPayLogo;
+
+  const renderLeafItem = (item: NavItem) => {
+    const content = (
+      <Link
+        to={item.path!}
+        onClick={() => isMobile && onClose?.()}
+        className={getItemClass(item.path, isActive, collapsed)}
+      >
+        <div
+          className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "gap-3"}`}
+        >
+          {renderIcon(item.icon)}
+          {!collapsed && (
+            <span className="truncate text-[15px] font-medium whitespace-nowrap">
+              {item.title}
+            </span>
+          )}
+        </div>
+      </Link>
+    );
+
+    return item.alwaysVisible ? (
+      content
+    ) : (
+      <PermissionWrapper permission={item.permission!}>{content}</PermissionWrapper>
     );
   };
 
-  // Helper to check if any child is active
-  const isParentActive = (item: any) => {
-    if (!item.children) return false;
-    return item.children.some((child: any) => isActive(child.path));
+  const renderExpandableItem = (item: NavItem) => {
+    const parentActive = isParentActive(item);
+    const expanded = isOpen === item.id;
+
+    const button = (
+      <button
+        type="button"
+        onClick={() => toggleSection(item.id)}
+        className={`${getItemClass(undefined, undefined, collapsed, parentActive)} flex w-full`}
+      >
+        <div
+          className={`flex min-w-0 items-center ${collapsed ? "" : "flex-1 gap-3"}`}
+        >
+          {renderIcon(item.icon)}
+          {!collapsed && (
+            <span className="truncate text-[15px] font-medium whitespace-nowrap">
+              {item.title}
+            </span>
+          )}
+        </div>
+
+        {!collapsed && (
+          <span
+            className="ml-2 flex shrink-0 items-center justify-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSection(item.id);
+            }}
+          >
+            <FiChevronDown
+              className={`h-4 w-4 transition-transform duration-300 ${
+                expanded ? "rotate-180" : "rotate-0"
+              }`}
+              aria-hidden
+            />
+          </span>
+        )}
+      </button>
+    );
+
+    const submenu =
+      !collapsed && item.children?.length ? (
+        <div
+          className={`grid transition-all duration-300 ease-in-out ${
+            expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="ml-5 mt-1 space-y-1 border-l border-[#E5E7EB] pl-3">
+              {item.children.map(({ label, path, id }) =>
+                item.alwaysVisible ? (
+                  <Link
+                    key={id}
+                    to={path}
+                    onClick={() => isMobile && onClose?.()}
+                    className={getSubItemClass(path, isActive)}
+                  >
+                    <span className="whitespace-nowrap">{label}</span>
+                  </Link>
+                ) : (
+                  <PermissionWrapper key={id} permission={id}>
+                    <Link
+                      to={path}
+                      onClick={() => isMobile && onClose?.()}
+                      className={getSubItemClass(path, isActive)}
+                    >
+                      <span className="whitespace-nowrap">{label}</span>
+                    </Link>
+                  </PermissionWrapper>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null;
+
+    return item.alwaysVisible ? (
+      <>
+        {button}
+        {submenu}
+      </>
+    ) : (
+      <PermissionWrapper permission={item.permission!}>
+        {button}
+        {submenu}
+      </PermissionWrapper>
+    );
   };
 
   return (
     <div className="relative h-full">
       <div
         onClick={() => collapsed && setCollapsed(false)}
-        className={`relative z-10 flex h-full flex-col overflow-x-visible border-r border-[#E5E7EB] bg-white transition-all duration-300 ease-in-out ${
-          isMobile ? "w-full" : collapsed ? "w-[72px]" : "w-[260px]"
+        className={`relative z-10 flex h-full flex-col overflow-x-hidden border-r border-[#E5E7EB] bg-white transition-all duration-300 ease-in-out ${
+          isMobile ? "w-full" : collapsed ? "w-[72px]" : "w-[256px]"
         }`}
       >
         {isMobile && (
           <button
+            type="button"
             onClick={onClose}
             className="absolute right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-lg bg-[#F3F4F6] text-sm text-[#374151]"
           >
@@ -122,231 +269,56 @@ const SideNavBar = ({
           </button>
         )}
 
-        {userType === "HOST_ADMIN" ? (
-          <div className="flex h-[72px] shrink-0 items-center justify-center px-4">
-            <img
-              src={LuckPayLogo}
-              alt="Logo"
-              className={`object-contain transition-all duration-300 ${
-                collapsed ? "h-8 w-8" : "h-10 w-auto max-w-[160px]"
-              }`}
-            />
-          </div>
-        ) : (
-          <div className="flex h-[72px] shrink-0 items-center justify-center px-4">
-            <img
-              src={orgImage || LuckPayLogo}
-              alt="Logo"
-              className={`object-contain transition-all duration-300 ${
-                collapsed ? "h-8 w-8" : "h-10 w-auto max-w-[160px]"
-              }`}
-            />
-          </div>
-        )}
+        {/* Logo */}
+        <div
+          className={`flex h-[72px] shrink-0 items-center ${
+            collapsed ? "justify-center px-2" : "justify-start px-4"
+          }`}
+        >
+          <img
+            src={logoSrc}
+            alt="Logo"
+            className={`object-contain transition-all duration-300 ${
+              collapsed ? "h-9 w-auto max-w-[40px]" : "h-10 w-auto max-w-[160px]"
+            }`}
+          />
+        </div>
 
         <div className="min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {filteredNavItems.map((item) => {
-            const isItemActive = isParentActive(item) || (item.path && isActive(item.path));
-            
+          {/* Host Admin only — same org select logic previously in Header */}
+          {!collapsed && userType === "HOST_ADMIN" && <OrganizationSelector />}
+
+          {filteredNavItems.map((item, index) => {
+            const previousItem = filteredNavItems[index - 1];
+            const showSectionHeading =
+              !collapsed &&
+              !!item.section &&
+              (!previousItem || previousItem.section !== item.section);
+
             return (
-              <div key={item.id || item.section} className="w-full">
-                {item.path ? (
-                  item.alwaysVisible ? (
-                    <div
-                      onClick={() => item.children?.length && toggleSection(item.section)}
-                      className={getItemClass(item.path, isActive, collapsed)}
-                    >
-                      <Link
-                        to={item.path}
-                        className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "w-full gap-3"}`}
-                      >
-                        {renderIcon(item.icon, item.path)}
-                        {!collapsed && (
-                          <span className="truncate text-[15px] font-medium whitespace-nowrap">
-                            {item.title}
-                          </span>
-                        )}
-                      </Link>
-                      {!collapsed && item.children?.length && (
-                        <button
-                          onClick={() => toggleSection(item.section)}
-                          className="ml-auto flex shrink-0 items-center justify-center"
-                        >
-                          <img
-                            src={ArrowSvg}
-                            className={`h-3 w-3 transition-transform duration-300 ${
-                              isOpen === item.section ? "rotate-180" : ""
-                            }`}
-                            alt="Arrow"
-                          />
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <PermissionWrapper permission={item.permission!}>
-                      <div
-                        onClick={() => item.children?.length && toggleSection(item.section)}
-                        className={getItemClass(item.path, isActive, collapsed)}
-                      >
-                        <Link
-                          to={item.path}
-                          className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "w-full gap-3"}`}
-                        >
-                          {renderIcon(item.icon, item.path)}
-                          {!collapsed && (
-                            <span className="truncate text-[15px] font-medium whitespace-nowrap">
-                              {item.title}
-                            </span>
-                          )}
-                        </Link>
-                        {!collapsed && item.children?.length && (
-                          <button
-                            onClick={() => toggleSection(item.section)}
-                            className="ml-auto flex shrink-0 items-center justify-center"
-                          >
-                            <img
-                              src={ArrowSvg}
-                              className={`h-3 w-3 transition-transform duration-300 ${
-                                isOpen === item.section ? "rotate-180" : ""
-                              }`}
-                              alt="Arrow"
-                            />
-                          </button>
-                        )}
-                      </div>
-                    </PermissionWrapper>
-                  )
-                ) : item.alwaysVisible ? (
-                  <>
-                    {!collapsed && (
-                      <p className="mb-2 mt-4 px-3 text-sm font-medium text-[#9CA3AF] first:mt-1">
-                        {item.section}
-                      </p>
-                    )}
-                    <button
-                      onClick={() => toggleSection(item.section)}
-                      className={`${getItemClass(undefined, undefined, collapsed)} flex w-full`}
-                    >
-                      <div className={`flex min-w-0 items-center ${collapsed ? "" : "flex-1 gap-3"}`}>
-                        {renderIcon(item.icon, item.path || "")}
-                        {!collapsed && (
-                          <span className="truncate text-[15px] font-medium whitespace-nowrap">
-                            {item.title}
-                          </span>
-                        )}
-                      </div>
-
-                      {!collapsed && (
-                        <img
-                          src={ArrowSvg}
-                          className={`ml-2 h-3 w-3 shrink-0 transition-transform duration-300 ${
-                            isOpen === item.section ? "rotate-180" : ""
-                          }`}
-                          alt="Arrow"
-                        />
-                      )}
-                    </button>
-
-                    {!collapsed && (
-                      <div
-                        className={`grid transition-all duration-300 ease-in-out ${
-                          isOpen === item.section
-                            ? "grid-rows-[1fr] opacity-100"
-                            : "grid-rows-[0fr] opacity-0"
-                        }`}
-                      >
-                        <div className="overflow-hidden">
-                          <div className="ml-5 mt-1 space-y-1 border-l border-[#E5E7EB] pl-3">
-                            {item.children?.map(({ label, path, id }) => (
-                              <Link
-                                key={id}
-                                to={path}
-                                className={getSubItemClass(path, isActive)}
-                              >
-                                <span className="whitespace-nowrap">{label}</span>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <PermissionWrapper key={item.id} permission={item.permission!}>
-                    {!collapsed && (
-                      <p className="mb-2 mt-4 px-3 text-sm font-medium text-[#9CA3AF] first:mt-1">
-                        {item.section}
-                      </p>
-                    )}
-                    <button
-                      onClick={() => toggleSection(item.section)}
-                      className={`${getItemClass(undefined, undefined, collapsed)} flex w-full`}
-                    >
-                      <div className={`flex min-w-0 items-center ${collapsed ? "" : "flex-1 gap-3"}`}>
-                        {renderIcon(item.icon, item.path || "")}
-                        {!collapsed && (
-                          <span className="truncate text-[15px] font-medium whitespace-nowrap">
-                            {item.title}
-                          </span>
-                        )}
-                      </div>
-
-                      {!collapsed && (
-                        <img
-                          src={ArrowSvg}
-                          className={`ml-2 h-3 w-3 shrink-0 transition-transform duration-300 ${
-                            isOpen === item.section ? "rotate-180" : ""
-                          }`}
-                          alt="Arrow"
-                        />
-                      )}
-                    </button>
-
-                    {!collapsed && (
-                      <div
-                        className={`grid transition-all duration-300 ease-in-out ${
-                          isOpen === item.section
-                            ? "grid-rows-[1fr] opacity-100"
-                            : "grid-rows-[0fr] opacity-0"
-                        }`}
-                      >
-                        <div className="overflow-hidden">
-                          <div className="ml-5 mt-1 space-y-1 border-l border-[#E5E7EB] pl-3">
-                            {item.children?.map(({ label, path, id }) => (
-                              <PermissionWrapper key={id} permission={id}>
-                                <Link to={path} className={getSubItemClass(path, isActive)}>
-                                  <span className="whitespace-nowrap">{label}</span>
-                                </Link>
-                              </PermissionWrapper>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </PermissionWrapper>
+              <div key={item.id} className="w-full">
+                {showSectionHeading && (
+                  <p
+                    className={`mb-2 px-3 text-[14px] font-normal text-[#929292] ${
+                      index === 0 ? "mt-1" : "mt-4"
+                    }`}
+                  >
+                    {item.section}
+                  </p>
                 )}
+
+                {item.path && !item.children?.length
+                  ? renderLeafItem(item)
+                  : item.path && item.children?.length
+                    ? renderLeafItem(item)
+                    : renderExpandableItem(item)}
               </div>
             );
           })}
         </div>
-
-        {!isMobile && (
-          <button
-            type="button"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            onClick={() => setCollapsed(!collapsed)}
-            className="absolute right-[-12px] top-[72px] z-[9999] flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md bg-primary text-white shadow-sm transition hover:opacity-90"
-          >
-            {collapsed ? (
-              <FiChevronRight className="h-3.5 w-3.5" />
-            ) : (
-              <FiChevronLeft className="h-3.5 w-3.5" />
-            )}
-          </button>
-        )}
       </div>
     </div>
   );
 };
 
-export default SideNavBar;
+export default SideNavBar;  
