@@ -10,6 +10,16 @@ export function extractDepartment(
   return department || "-";
 }
 
+export function extractDesignation(
+  employeeSnapshot: string | null | undefined
+): string {
+  if (!employeeSnapshot?.trim()) return "-";
+
+  const match = employeeSnapshot.match(/Designation:\s*([^|]+)/i);
+  const designation = match?.[1]?.trim();
+  return designation || "-";
+}
+
 export function formatResignationDate(
   value: string | null | undefined
 ): string {

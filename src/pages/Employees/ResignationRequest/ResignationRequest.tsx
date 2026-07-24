@@ -247,7 +247,7 @@ export default function ResignationRequests() {
   };
 
   const handleView = (resignationRequestId: number) => {
-    navigate(`/resignationRequest/details/${resignationRequestId}`);
+    navigate(`/resignationRequest/details`, { state: { resignationRequestId } });
   };
 
   const renderCell = (columnKey: string, item: ResignationRequestItem) => {

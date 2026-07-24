@@ -6,11 +6,12 @@ import SignIn from "../pages/Auth/Login.tsx";
 import ResetPassword from "../pages/Auth/ResetPassword.tsx";
 import MainLayout from "../layouts/MainLayout.tsx";
 import Dashboard from "../pages/Dashboard/Dashboard.tsx";
-import Employees from "../pages/Employees/Employee/Employees.js";
+import Employees from "../pages/Employees/Employee/Employees.tsx";
 import ResignationRequest from "../pages/Employees/ResignationRequest/ResignationRequest.tsx";
 import type { RootState } from "../redux/index.ts";
-import Target from "@/pages/Targets/Target.js";
-import Announcements from "@/pages/Announcment/Announcements.js";
+import Target from "../pages/Targets/Target.tsx";
+import Announcements from "../pages/Announcment/Announcements.tsx";
+import ViewResignationRequest from "../pages/Employees/ResignationRequest/ViewResignationRequest.tsx";
 
 
 const UnknownRouteRedirect = (): JSX.Element => {
@@ -62,6 +63,8 @@ const AppRoutes = (): JSX.Element => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="employees" element={<Employees />} />
         <Route path="resignationrequest" element={<ResignationRequest />} />
+        <Route path="/resignationRequest/details" element={<ViewResignationRequest />} />
+
         <Route path="target" element={<Target />} />
         <Route path="announcement" element={<Announcements />} />
         <Route path="profile" element={<div />} />
