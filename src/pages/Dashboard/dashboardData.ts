@@ -1,3 +1,7 @@
+/**
+ * Legacy dashboard mock datasets — preserved for `./legacy` widgets.
+ * Active Dashboard uses `workforceOverviewData.ts` instead.
+ */
 export const metrics = [
   {
     id: "employees",

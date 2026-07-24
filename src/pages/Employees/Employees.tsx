@@ -17,6 +17,8 @@ import DateRangeDropdown, {
 import SortDropdown from "../../components/common/ui/SortDropdown.tsx";
 import FilterPanel from "../../components/common/ui/FilterPanel.tsx";
 import DataTable from "../../components/common/ui/DataTable.tsx";
+import ManageColumnsDrawer from "../../components/common/ui/ManageColumnsDrawer.tsx";
+import type { ManageColumnConfig } from "../../components/common/ui/manageColumnsTypes.ts";
 import type {
   FilterFieldConfig,
   FilterValues,
@@ -26,16 +28,21 @@ import {
   ConfirmUploadModal,
 } from "../../components/common/modals/BulkUploadModal";
 
-const EMPLOYEE_COLUMNS = [
-  { key: "id", label: "Employee ID" },
-  { key: "name", label: "Name" },
-  { key: "department", label: "Department" },
-  { key: "doj", label: "Date of Joining" },
-  { key: "manager", label: "Reporting Manager" },
-  { key: "designation", label: "Designation" },
-  { key: "status", label: "Status" },
-  { key: "actions", label: "Actions" },
+/** Employee table column config — source of truth for headers + Manage Columns. */
+const EMPLOYEE_COLUMN_CONFIG: ManageColumnConfig[] = [
+  { id: "id", label: "Employee ID", pinned: true, defaultVisible: true },
+  { id: "name", label: "Name", pinned: true, defaultVisible: true },
+  { id: "status", label: "Status", pinned: true, defaultVisible: true },
+  { id: "actions", label: "Actions", pinned: true, defaultVisible: true },
+  { id: "department", label: "Department", defaultVisible: true },
+  { id: "doj", label: "Date of Joining", defaultVisible: true },
+  { id: "manager", label: "Reporting Manager", defaultVisible: true },
+  { id: "designation", label: "Designation", defaultVisible: true },
 ];
+
+const DEFAULT_VISIBLE_COLUMN_IDS = EMPLOYEE_COLUMN_CONFIG.filter(
+  (c) => c.pinned || c.defaultVisible !== false
+).map((c) => c.id);
 
 const EMPTY_FILTERS: FilterValues = {
   status: "",
@@ -88,6 +95,11 @@ export default function Employees() {
   const [appliedFilters, setAppliedFilters] =
     useState<FilterValues>(EMPTY_FILTERS);
 
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [visibleColumnIds, setVisibleColumnIds] = useState<string[]>(
+    DEFAULT_VISIBLE_COLUMN_IDS
+  );
+
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [confirmUploadOpen, setConfirmUploadOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -96,7 +108,15 @@ export default function Employees() {
 
   const activeFilterCount = useMemo(
     () => Object.values(appliedFilters).filter(Boolean).length,
-    [appliedFilters],
+    [appliedFilters]
+  );
+
+  const visibleColumns = useMemo(
+    () =>
+      EMPLOYEE_COLUMN_CONFIG.filter((c) => visibleColumnIds.includes(c.id)).map(
+        (c) => ({ key: c.id, label: c.label })
+      ),
+    [visibleColumnIds]
   );
 
   const handleFilterChange = (key: string, value: string) => {
@@ -154,10 +174,6 @@ export default function Employees() {
   const handleConfirmUpload = async (file: File) => {
     setIsUploading(true);
     try {
-      // Example (do not call from modal):
-      // const formData = new FormData();
-      // formData.append("file", file);
-      // await employeeService.bulkUpload(formData);
       void file;
       toast.info("Wire employee bulk upload API in this handler.");
       handleBulkUploadClose();
@@ -225,10 +241,14 @@ export default function Employees() {
 
           <FilterChip
             icon={<FiColumns className="h-4 w-4 shrink-0 text-[#6B7280]" />}
+            active={columnsOpen}
             showChevron
+            chevronOpen={columnsOpen}
+            onClick={() => setColumnsOpen(true)}
+            aria-expanded={columnsOpen}
             badge={
               <span className="inline-flex shrink-0 items-center rounded-full bg-tertiary px-2 py-0.5 text-xs font-semibold text-primary">
-                7/12
+                {visibleColumnIds.length}/{EMPLOYEE_COLUMN_CONFIG.length}
               </span>
             }
           >
@@ -236,8 +256,9 @@ export default function Employees() {
           </FilterChip>
         </div>
       </div>
+
       {filterOpen && (
-        <div className="mt-4">
+        <div>
           <FilterPanel
             filters={EMPLOYEE_FILTER_CONFIG}
             values={draftFilters}
@@ -248,8 +269,9 @@ export default function Employees() {
           />
         </div>
       )}
+
       <DataTable
-        columns={EMPLOYEE_COLUMNS}
+        columns={visibleColumns}
         empty
         pagination={{
           pageSize,
@@ -266,6 +288,16 @@ export default function Employees() {
             if (!Number.isNaN(page) && page >= 1) setCurrentPage(page);
           },
         }}
+      />
+
+      <ManageColumnsDrawer
+        open={columnsOpen}
+        onClose={() => setColumnsOpen(false)}
+        title="Manage columns"
+        description="Choose which fields appear in the Employees table."
+        columns={EMPLOYEE_COLUMN_CONFIG}
+        selectedColumnIds={visibleColumnIds}
+        onConfirm={setVisibleColumnIds}
       />
 
       <BulkUploadModal

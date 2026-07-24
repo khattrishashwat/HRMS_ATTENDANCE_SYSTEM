@@ -1,85 +1,108 @@
-import { Users, BadgeCheck, TrendingUp, LayoutGrid, ListTodo } from "lucide-react";
+import { UserPlus, Users, FileCheck2, BriefcaseBusiness } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../redux/index.ts";
-import { celebrations, metrics, onLeave, workFromHome } from "./dashboardData.ts";
-import DashboardHeader from "./DashboardHeader.tsx";
-import StatCard from "./StatCard.tsx";
-import WorkforceDistribution from "./WorkforceDistribution.tsx";
-import DepartmentDistribution from "./DepartmentDistribution.tsx";
-import ProductivityOverview from "./ProductivityOverview.tsx";
-import PendingRequests from "./PendingRequests.tsx";
-import AttendanceAvailability from "./AttendanceAvailability.tsx";
-import AnnouncementCard from "./AnnouncementCard.tsx";
-import EmployeeListCard from "./EmployeeListCard.tsx";
-import CelebrationCard from "./CelebrationCard.tsx";
+import OverviewHeader from "./OverviewHeader.tsx";
+import OverviewMetricCard from "./OverviewMetricCard.tsx";
+import PeopleStatusCard from "./PeopleStatusCard.tsx";
+import DepartmentBarsCard from "./DepartmentBarsCard.tsx";
+import AttendanceDonutCard from "./AttendanceDonutCard.tsx";
+import ProbationTrackerCard from "./ProbationTrackerCard.tsx";
+import ProductivityTiersCard from "./ProductivityTiersCard.tsx";
+import {
+  TOTAL_EMPLOYEES,
+  attendanceSlices,
+  celebrationUpcoming,
+  celebrationYesterday,
+  departmentBars,
+  onLeaveUpcoming,
+  onLeaveYesterday,
+  overviewMetrics,
+  probationItems,
+  productivityTiers,
+  productivityTrackedTotal,
+  wfhUpcoming,
+  wfhYesterday,
+} from "./workforceOverviewData.ts";
 
-const iconMap = {
+const metricIcons = {
   users: Users,
-  check: BadgeCheck,
-  trending: TrendingUp,
-  building: LayoutGrid,
-  clock: ListTodo,
-};
+  joiner: UserPlus,
+  attendance: FileCheck2,
+  productivity: BriefcaseBusiness,
+} as const;
 
 /**
- * Dashboard page content only — rendered inside MainLayout <Outlet />.
+ * Active Dashboard — workforce overview (reference design).
+ * Legacy widgets remain available via `./legacy`.
  */
 export default function Dashboard() {
   const userName = useSelector((state: RootState) => state.auth.userName);
-  const displayName = userName?.trim() || "Harshit Trivedi";
+  const displayName = userName?.trim() || "User";
+
+  const onLeaveCount = onLeaveYesterday.length + onLeaveUpcoming.length;
+  const wfhCount = wfhYesterday.length + wfhUpcoming.length;
+  const celebrationCount =
+    celebrationYesterday.length + celebrationUpcoming.length;
 
   return (
-    <div className="flex min-w-0 flex-col gap-4 sm:gap-5">
-      <DashboardHeader displayName={displayName} />
+    <div className="flex min-w-0 flex-col gap-5">
+      <OverviewHeader displayName={displayName} />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {metrics.map((metric) => (
-          <StatCard
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {overviewMetrics.map((metric) => (
+          <OverviewMetricCard
             key={metric.id}
-            label={metric.label}
+            title={metric.title}
             value={metric.value}
-            icon={iconMap[metric.icon]}
+            subtitle={metric.subtitle}
+            icon={metricIcons[metric.icon]}
             iconBg={metric.iconBg}
             iconColor={metric.iconColor}
           />
         ))}
       </div>
 
-      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5 lg:gap-5">
-        <div className="min-w-0 lg:col-span-3">
-          <WorkforceDistribution />
-        </div>
-        <div className="min-w-0 lg:col-span-2">
-          <DepartmentDistribution />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5 lg:gap-5">
-        <div className="min-w-0 lg:col-span-3">
-          <ProductivityOverview />
-        </div>
-        <div className="min-w-0 lg:col-span-2">
-          <PendingRequests />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2 lg:gap-5">
-        <AttendanceAvailability />
-        <AnnouncementCard />
-      </div>
-
-      <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-5">
-        <EmployeeListCard
-          title="Work From Home"
-          subtitle="Currently remote today"
-          employees={workFromHome}
-        />
-        <EmployeeListCard
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+        <PeopleStatusCard
           title="On Leave"
-          subtitle="Approved leave today"
-          employees={onLeave}
+          badgeLabel={`${onLeaveCount} employees`}
+          badgeClass="bg-tertiary text-primary"
+          yesterday={onLeaveYesterday}
+          upcoming={onLeaveUpcoming}
         />
-        <CelebrationCard celebrations={celebrations} />
+        <PeopleStatusCard
+          title="Work From Home"
+          badgeLabel={`${wfhCount} employees`}
+          badgeClass="bg-[#DBEAFE] text-[#1D4ED8]"
+          yesterday={wfhYesterday}
+          upcoming={wfhUpcoming}
+        />
+        <PeopleStatusCard
+          title="Birthdays & Anniversaries"
+          badgeLabel={`${celebrationCount} this week`}
+          badgeClass="bg-[#FFEDD5] text-[#C2410C]"
+          yesterday={celebrationYesterday}
+          upcoming={celebrationUpcoming}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+        <DepartmentBarsCard
+          departments={departmentBars}
+          totalEmployees={TOTAL_EMPLOYEES}
+        />
+        <AttendanceDonutCard
+          slices={attendanceSlices}
+          totalEmployees={TOTAL_EMPLOYEES}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+        <ProbationTrackerCard items={probationItems} />
+        <ProductivityTiersCard
+          totalTracked={productivityTrackedTotal}
+          tiers={productivityTiers}
+        />
       </div>
     </div>
   );
