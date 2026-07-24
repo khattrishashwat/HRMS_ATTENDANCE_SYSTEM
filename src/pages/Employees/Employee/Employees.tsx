@@ -7,26 +7,26 @@ import {
   FiColumns,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
-import PageHeader from "../../components/common/PageHeader.tsx";
-import ActionButton from "../../components/common/ActionButton.tsx";
-import SearchBox from "../../components/common/SearchBox.tsx";
-import FilterChip from "../../components/common/FilterChip.tsx";
+import PageHeader from "../../../components/common/PageHeader.js";
+import ActionButton from "../../../components/common/ActionButton.js";
+import SearchBox from "../../../components/common/SearchBox.js";
+import FilterChip from "../../../components/common/FilterChip.js";
 import DateRangeDropdown, {
   type DateRangeValue,
-} from "../../components/common/DateRangeDropdown.tsx";
-import SortDropdown from "../../components/common/SortDropdown.tsx";
-import FilterPanel from "../../components/common/FilterPanel.tsx";
-import DataTable from "../../components/tables/DataTable.tsx";
-import ManageColumnsDrawer from "../../components/drawers/ManageColumnsDrawer.tsx";
-import type { ManageColumnConfig } from "../../components/drawers/manageColumnsTypes.ts";
+} from "../../../components/common/DateRangeDropdown.js";
+import SortDropdown from "../../../components/common/SortDropdown.js";
+import FilterPanel from "../../../components/common/FilterPanel.js";
+import DataTable from "../../../components/tables/DataTable.js";
+import ManageColumnsDrawer from "../../../components/drawers/ManageColumnsDrawer.js";
+import type { ManageColumnConfig } from "../../../components/drawers/manageColumnsTypes.js";
 import type {
   FilterFieldConfig,
   FilterValues,
-} from "../../components/common/dropdownTypes.ts";
+} from "../../../components/common/dropdownTypes.js";
 import {
   BulkUploadModal,
   ConfirmUploadModal,
-} from "../../components/common/Modals/BulkUploadModal";
+} from "../../../components/common/Modals/BulkUploadModal/index.js";
 
 /** Employee table column config — source of truth for headers + Manage Columns. */
 const EMPLOYEE_COLUMN_CONFIG: ManageColumnConfig[] = [

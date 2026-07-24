@@ -6,8 +6,11 @@ import SignIn from "../pages/Auth/Login.tsx";
 import ResetPassword from "../pages/Auth/ResetPassword.tsx";
 import MainLayout from "../layouts/MainLayout.tsx";
 import Dashboard from "../pages/Dashboard/Dashboard.tsx";
-import Employees from "../pages/Employees/Employees.tsx";
+import Employees from "../pages/Employees/Employee/Employees.js";
+import ResignationRequest from "../pages/Employees/ResignationRequest/ResignationRequest.tsx";
 import type { RootState } from "../redux/index.ts";
+import Target from "@/pages/Targets/Target.js";
+import Announcements from "@/pages/Announcment/Announcements.js";
 
 
 const UnknownRouteRedirect = (): JSX.Element => {
@@ -58,6 +61,9 @@ const AppRoutes = (): JSX.Element => {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="employees" element={<Employees />} />
+        <Route path="resignationrequest" element={<ResignationRequest />} />
+        <Route path="target" element={<Target />} />
+        <Route path="announcement" element={<Announcements />} />
         <Route path="profile" element={<div />} />
       </Route>
 

@@ -1,5 +1,3 @@
-// sideNavItems.ts
-
 export interface NavChildItem {
   id: string;
   label: string;
