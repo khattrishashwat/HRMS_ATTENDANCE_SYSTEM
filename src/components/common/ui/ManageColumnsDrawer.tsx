@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiCheck, FiSearch, FiX } from "react-icons/fi";
@@ -15,7 +15,7 @@ function getDefaultSelectedIds(
 }
 
 /**
- * Reusable left-side Manage Columns drawer.
+ * Reusable right-side Manage Columns drawer.
  * Temporary selection until Confirm; close discards drafts.
  */
 export default function ManageColumnsDrawer({
@@ -30,6 +30,8 @@ export default function ManageColumnsDrawer({
 }: ManageColumnsDrawerProps) {
   const [draftIds, setDraftIds] = useState<string[]>(selectedColumnIds);
   const [search, setSearch] = useState("");
+  /** Prevents the Columns click that opens the drawer from also hitting the overlay. */
+  const allowOverlayCloseRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -38,14 +40,29 @@ export default function ManageColumnsDrawer({
   }, [open, selectedColumnIds]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      allowOverlayCloseRef.current = false;
+      return;
+    }
+
+    // Defer overlay close until after the opening click/mouseup finishes,
+    // otherwise the same user gesture can hit the new full-screen overlay
+    // and immediately call onClose (drawer appears to never open).
+    allowOverlayCloseRef.current = false;
+    const enableCloseTimer = window.setTimeout(() => {
+      allowOverlayCloseRef.current = true;
+    }, 100);
+
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
+
     return () => {
+      window.clearTimeout(enableCloseTimer);
+      allowOverlayCloseRef.current = false;
       document.body.style.overflow = previous;
       document.removeEventListener("keydown", onKey);
     };
@@ -74,7 +91,6 @@ export default function ManageColumnsDrawer({
 
   const handleReset = () => {
     const defaults = getDefaultSelectedIds(columns);
-    // Ensure pinned always included
     const withPinned = Array.from(
       new Set([...defaults, ...Array.from(pinnedIds)])
     );
@@ -85,7 +101,6 @@ export default function ManageColumnsDrawer({
     const withPinned = Array.from(
       new Set([...draftIds, ...Array.from(pinnedIds)])
     );
-    // Preserve column definition order
     const ordered = columns
       .filter((c) => withPinned.includes(c.id))
       .map((c) => c.id);
@@ -93,10 +108,19 @@ export default function ManageColumnsDrawer({
     onClose();
   };
 
+  const handleOverlayClose = () => {
+    if (!allowOverlayCloseRef.current) return;
+    onClose();
+  };
+
   return createPortal(
     <AnimatePresence>
       {open ? (
-        <div className="fixed inset-0 z-[9999] flex" role="presentation">
+        <div
+          key="manage-columns-drawer"
+          className="fixed inset-0 z-[9999] flex justify-end"
+          role="presentation"
+        >
           <motion.button
             type="button"
             aria-label="Close columns panel"
@@ -104,7 +128,7 @@ export default function ManageColumnsDrawer({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleOverlayClose}
           />
 
           <motion.aside
@@ -112,10 +136,11 @@ export default function ManageColumnsDrawer({
             aria-modal="true"
             aria-labelledby="manage-columns-title"
             className="relative z-10 flex h-full w-[min(100%,400px)] flex-col bg-white shadow-2xl"
-            initial={{ x: "-100%" }}
+            initial={{ x: "100%" }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
+            exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.28, ease: "easeOut" }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="border-b border-[#E5E7EB] px-5 pt-5 pb-4">
               <div className="flex items-start justify-between gap-3">
@@ -135,7 +160,7 @@ export default function ManageColumnsDrawer({
                   type="button"
                   aria-label="Close"
                   onClick={onClose}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F3F4F6] hover:text-[#6B7280]"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F9FAFB] hover:text-[#6B7280]"
                 >
                   <FiX className="h-5 w-5" aria-hidden />
                 </button>
