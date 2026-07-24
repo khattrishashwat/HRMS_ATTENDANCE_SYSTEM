@@ -85,7 +85,8 @@ export default function Employees() {
   const [sortBy, setSortBy] = useState("date_desc");
   const [filterOpen, setFilterOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<FilterValues>(EMPTY_FILTERS);
-  const [appliedFilters, setAppliedFilters] = useState<FilterValues>(EMPTY_FILTERS);
+  const [appliedFilters, setAppliedFilters] =
+    useState<FilterValues>(EMPTY_FILTERS);
 
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [confirmUploadOpen, setConfirmUploadOpen] = useState(false);
@@ -95,7 +96,7 @@ export default function Employees() {
 
   const activeFilterCount = useMemo(
     () => Object.values(appliedFilters).filter(Boolean).length,
-    [appliedFilters]
+    [appliedFilters],
   );
 
   const handleFilterChange = (key: string, value: string) => {
@@ -234,21 +235,19 @@ export default function Employees() {
             Columns
           </FilterChip>
         </div>
-
-       
       </div>
- {filterOpen && (
-          <div className="mt-4">
-            <FilterPanel
-              filters={EMPLOYEE_FILTER_CONFIG}
-              values={draftFilters}
-              onChange={handleFilterChange}
-              onReset={handleFilterReset}
-              onApply={handleFilterApply}
-              onClose={() => setFilterOpen(false)}
-            />
-          </div>
-        )}
+      {filterOpen && (
+        <div className="mt-4">
+          <FilterPanel
+            filters={EMPLOYEE_FILTER_CONFIG}
+            values={draftFilters}
+            onChange={handleFilterChange}
+            onReset={handleFilterReset}
+            onApply={handleFilterApply}
+            onClose={() => setFilterOpen(false)}
+          />
+        </div>
+      )}
       <DataTable
         columns={EMPLOYEE_COLUMNS}
         empty
