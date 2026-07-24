@@ -1,5 +1,5 @@
-import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import { announcements } from "./dashboardData.ts";
+import DashboardCard, { SectionTitle } from "../cards/DashboardCard.tsx";
+import { announcements } from "../../pages/Dashboard/dashboardData.ts";
 
 export default function AnnouncementCard() {
   return (

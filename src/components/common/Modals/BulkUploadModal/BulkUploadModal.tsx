@@ -1,6 +1,6 @@
 import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import { FiUpload } from "react-icons/fi";
-import ActionButton from "../../ui/ActionButton.tsx";
+import ActionButton from "../../ActionButton.tsx";
 import ModalShell, { useModalIds } from "./ModalShell.tsx";
 import {
   DEFAULT_ACCEPTED_FILE_TYPES,

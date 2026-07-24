@@ -1,6 +1,6 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import { attendanceStatus } from "./dashboardData.ts";
+import DashboardCard, { SectionTitle } from "../cards/DashboardCard.tsx";
+import { attendanceStatus } from "../../pages/Dashboard/dashboardData.ts";
 
 export default function AttendanceAvailability() {
   return (

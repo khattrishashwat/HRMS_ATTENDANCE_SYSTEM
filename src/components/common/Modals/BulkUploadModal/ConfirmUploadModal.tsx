@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FiCheck, FiFileText, FiX } from "react-icons/fi";
-import ActionButton from "../../ui/ActionButton.tsx";
+import ActionButton from "../../ActionButton.tsx";
 import ModalShell, { useModalIds } from "./ModalShell.tsx";
 import type { ConfirmUploadModalProps } from "./types.ts";
 import { formatFileSize } from "./fileUtils.ts";

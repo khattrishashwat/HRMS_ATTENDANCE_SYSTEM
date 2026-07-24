@@ -165,7 +165,7 @@ const TopNavbar: React.FC<NavbarProps> = ({
               className="flex h-10 items-center gap-2 rounded-full border border-[#E5E7EB] bg-white px-3 text-sm font-medium text-[#111827] transition hover:bg-[#F9FAFB] sm:px-4"
             >
               <FiUser className="h-4 w-4 shrink-0 text-primary" />
-              <span className="hidden max-w-[120px] truncate sm:inline">
+              <span className="hidden max-w-[120px]  text-[12px] truncate sm:inline">
                 {roleSwitchLoading ? "Switching..." : currentRoleDisplay}
               </span>
               <FiChevronDown className="h-4 w-4 shrink-0 text-[#6B7280]" />

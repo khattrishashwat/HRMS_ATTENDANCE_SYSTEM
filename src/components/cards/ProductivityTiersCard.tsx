@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import type { ProductivityTier } from "./workforceOverviewData.ts";
+
+export type ProductivityTierItem = {
+  id: string;
+  title: string;
+  range: string;
+  count: number;
+  percent: number;
+  barClass: string;
+  textClass: string;
+};
 
 type ProductivityTiersCardProps = {
   totalTracked: number;
-  tiers: ProductivityTier[];
+  tiers: ProductivityTierItem[];
 };
 
 export default function ProductivityTiersCard({

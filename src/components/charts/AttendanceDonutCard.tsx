@@ -1,9 +1,15 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
-import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import type { AttendanceSlice } from "./workforceOverviewData.ts";
+import DashboardCard, { SectionTitle } from "../cards/DashboardCard.tsx";
+
+export type AttendanceDonutSlice = {
+  key: string;
+  label: string;
+  value: number;
+  color: string;
+};
 
 type AttendanceDonutCardProps = {
-  slices: AttendanceSlice[];
+  slices: AttendanceDonutSlice[];
   totalEmployees: number;
 };
 

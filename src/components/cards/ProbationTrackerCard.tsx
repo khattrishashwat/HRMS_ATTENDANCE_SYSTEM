@@ -1,8 +1,14 @@
 import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import type { ProbationItem } from "./workforceOverviewData.ts";
+
+export type ProbationTrackerItem = {
+  id: string;
+  name: string;
+  department: string;
+  daysLeft: number;
+};
 
 type ProbationTrackerCardProps = {
-  items: ProbationItem[];
+  items: ProbationTrackerItem[];
 };
 
 export default function ProbationTrackerCard({ items }: ProbationTrackerCardProps) {

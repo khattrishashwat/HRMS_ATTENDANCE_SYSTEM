@@ -3,4 +3,20 @@
 @theme {
   --color-primary: #4b1b91;
   --color-tertiary: #f3e8ff;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+}
+
+html {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }

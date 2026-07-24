@@ -7,8 +7,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import { productivitySeries } from "./dashboardData.ts";
+import DashboardCard, { SectionTitle } from "../cards/DashboardCard.tsx";
+import { productivitySeries } from "../../pages/Dashboard/dashboardData.ts";
 
 export default function ProductivityOverview() {
   return (

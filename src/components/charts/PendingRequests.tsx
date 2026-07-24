@@ -1,5 +1,5 @@
-import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import { pendingRequests } from "./dashboardData.ts";
+import DashboardCard, { SectionTitle } from "../cards/DashboardCard.tsx";
+import { pendingRequests } from "../../pages/Dashboard/dashboardData.ts";
 
 const MAX = Math.max(...pendingRequests.map((item) => item.value));
 

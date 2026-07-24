@@ -31,6 +31,8 @@ type DateRangeDropdownProps = {
   /** Chip label when no meaningful selection display is needed */
   placeholder?: string;
   className?: string;
+  /** Optional classes for the FilterChip trigger (page-specific presentation). */
+  triggerClassName?: string;
 };
 
 export default function DateRangeDropdown({
@@ -40,6 +42,7 @@ export default function DateRangeDropdown({
   onCustomRange,
   placeholder = "Select date range",
   className = "",
+  triggerClassName = "",
 }: DateRangeDropdownProps) {
   const selected = options.find((o) => o.value === value);
   const chipLabel = selected?.label ?? placeholder;
@@ -63,6 +66,7 @@ export default function DateRangeDropdown({
           onClick={toggle}
           aria-expanded={open}
           aria-haspopup="listbox"
+          className={triggerClassName}
         >
           {chipLabel}
         </FilterChip>

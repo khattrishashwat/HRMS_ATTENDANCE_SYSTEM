@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiCheck, FiSearch, FiX } from "react-icons/fi";
 import { Pin } from "lucide-react";
-import ActionButton from "./ActionButton.tsx";
+import ActionButton from "../common/ActionButton.tsx";
 import type { ManageColumnsDrawerProps } from "./manageColumnsTypes.ts";
 
 function getDefaultSelectedIds(

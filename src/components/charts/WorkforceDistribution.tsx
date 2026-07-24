@@ -1,5 +1,5 @@
-import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import { workforceDistribution } from "./dashboardData.ts";
+import DashboardCard, { SectionTitle } from "../cards/DashboardCard.tsx";
+import { workforceDistribution } from "../../pages/Dashboard/dashboardData.ts";
 
 const MAX = Math.max(...workforceDistribution.map((item) => item.value));
 

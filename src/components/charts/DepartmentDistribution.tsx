@@ -1,6 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
-import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import { departmentDistribution } from "./dashboardData.ts";
+import DashboardCard, { SectionTitle } from "../cards/DashboardCard.tsx";
+import { departmentDistribution } from "../../pages/Dashboard/dashboardData.ts";
 
 const legendItems = departmentDistribution.slice(0, 5);
 

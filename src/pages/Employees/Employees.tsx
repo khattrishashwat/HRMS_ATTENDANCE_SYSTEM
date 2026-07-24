@@ -7,26 +7,26 @@ import {
   FiColumns,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
-import PageHeader from "../../components/common/ui/PageHeader.tsx";
-import ActionButton from "../../components/common/ui/ActionButton.tsx";
-import SearchBox from "../../components/common/ui/SearchBox.tsx";
-import FilterChip from "../../components/common/ui/FilterChip.tsx";
+import PageHeader from "../../components/common/PageHeader.tsx";
+import ActionButton from "../../components/common/ActionButton.tsx";
+import SearchBox from "../../components/common/SearchBox.tsx";
+import FilterChip from "../../components/common/FilterChip.tsx";
 import DateRangeDropdown, {
   type DateRangeValue,
-} from "../../components/common/ui/DateRangeDropdown.tsx";
-import SortDropdown from "../../components/common/ui/SortDropdown.tsx";
-import FilterPanel from "../../components/common/ui/FilterPanel.tsx";
-import DataTable from "../../components/common/ui/DataTable.tsx";
-import ManageColumnsDrawer from "../../components/common/ui/ManageColumnsDrawer.tsx";
-import type { ManageColumnConfig } from "../../components/common/ui/manageColumnsTypes.ts";
+} from "../../components/common/DateRangeDropdown.tsx";
+import SortDropdown from "../../components/common/SortDropdown.tsx";
+import FilterPanel from "../../components/common/FilterPanel.tsx";
+import DataTable from "../../components/tables/DataTable.tsx";
+import ManageColumnsDrawer from "../../components/drawers/ManageColumnsDrawer.tsx";
+import type { ManageColumnConfig } from "../../components/drawers/manageColumnsTypes.ts";
 import type {
   FilterFieldConfig,
   FilterValues,
-} from "../../components/common/ui/dropdownTypes.ts";
+} from "../../components/common/dropdownTypes.ts";
 import {
   BulkUploadModal,
   ConfirmUploadModal,
-} from "../../components/common/modals/BulkUploadModal";
+} from "../../components/common/Modals/BulkUploadModal";
 
 /** Employee table column config — source of truth for headers + Manage Columns. */
 const EMPLOYEE_COLUMN_CONFIG: ManageColumnConfig[] = [

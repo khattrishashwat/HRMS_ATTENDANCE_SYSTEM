@@ -1,13 +1,15 @@
+import { useState } from "react";
 import { UserPlus, Users, FileCheck2, BriefcaseBusiness } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../redux/index.ts";
-import OverviewHeader from "./OverviewHeader.tsx";
-import OverviewMetricCard from "./OverviewMetricCard.tsx";
-import PeopleStatusCard from "./PeopleStatusCard.tsx";
-import DepartmentBarsCard from "./DepartmentBarsCard.tsx";
-import AttendanceDonutCard from "./AttendanceDonutCard.tsx";
-import ProbationTrackerCard from "./ProbationTrackerCard.tsx";
-import ProductivityTiersCard from "./ProductivityTiersCard.tsx";
+import type { DateRangeValue } from "../../components/common/DateRangeDropdown.tsx";
+// import OverviewHeader from "./OverviewHeader.tsx";
+import OverviewMetricCard from "../../components/cards/OverviewMetricCard.tsx";
+import ProbationTrackerCard from "../../components/cards/ProbationTrackerCard.tsx";
+import ProductivityTiersCard from "../../components/cards/ProductivityTiersCard.tsx";
+import PeopleStatusCard from "../../components/widgets/PeopleStatusCard.tsx";
+import DepartmentBarsCard from "../../components/charts/DepartmentBarsCard.tsx";
+import AttendanceDonutCard from "../../components/charts/AttendanceDonutCard.tsx";
 import {
   TOTAL_EMPLOYEES,
   attendanceSlices,
@@ -23,6 +25,7 @@ import {
   wfhUpcoming,
   wfhYesterday,
 } from "./workforceOverviewData.ts";
+import DashboardHeader from "./DashboardHeader.js";
 
 const metricIcons = {
   users: Users,
@@ -38,6 +41,7 @@ const metricIcons = {
 export default function Dashboard() {
   const userName = useSelector((state: RootState) => state.auth.userName);
   const displayName = userName?.trim() || "User";
+  const [dateRange, setDateRange] = useState<DateRangeValue>("yesterday");
 
   const onLeaveCount = onLeaveYesterday.length + onLeaveUpcoming.length;
   const wfhCount = wfhYesterday.length + wfhUpcoming.length;
@@ -46,7 +50,16 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-w-0 flex-col gap-5">
-      <OverviewHeader displayName={displayName} />
+      <DashboardHeader
+        displayName={displayName}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+      />
+      {/* <OverviewHeader
+        displayName={displayName}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+      /> */}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {overviewMetrics.map((metric) => (
@@ -67,22 +80,28 @@ export default function Dashboard() {
           title="On Leave"
           badgeLabel={`${onLeaveCount} employees`}
           badgeClass="bg-tertiary text-primary"
-          yesterday={onLeaveYesterday}
-          upcoming={onLeaveUpcoming}
+          sections={[
+            { label: "Yesterday", items: onLeaveYesterday },
+            { label: "Upcoming", items: onLeaveUpcoming },
+          ]}
         />
         <PeopleStatusCard
           title="Work From Home"
           badgeLabel={`${wfhCount} employees`}
           badgeClass="bg-[#DBEAFE] text-[#1D4ED8]"
-          yesterday={wfhYesterday}
-          upcoming={wfhUpcoming}
+          sections={[
+            { label: "Yesterday", items: wfhYesterday },
+            { label: "Upcoming", items: wfhUpcoming },
+          ]}
         />
         <PeopleStatusCard
           title="Birthdays & Anniversaries"
           badgeLabel={`${celebrationCount} this week`}
           badgeClass="bg-[#FFEDD5] text-[#C2410C]"
-          yesterday={celebrationYesterday}
-          upcoming={celebrationUpcoming}
+          sections={[
+            { label: "Yesterday", items: celebrationYesterday },
+            { label: "Upcoming", items: celebrationUpcoming },
+          ]}
         />
       </div>
 

@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
-import DashboardCard, { SectionTitle } from "./DashboardCard.tsx";
-import type { DepartmentBar } from "./workforceOverviewData.ts";
+import DashboardCard, { SectionTitle } from "../cards/DashboardCard.tsx";
+
+export type DepartmentBarItem = {
+  name: string;
+  count: number;
+  percent: number;
+};
 
 type DepartmentBarsCardProps = {
-  departments: DepartmentBar[];
+  departments: DepartmentBarItem[];
   totalEmployees: number;
 };
 
